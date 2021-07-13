@@ -5,13 +5,13 @@ from functools import reduce
 import gmsh
 import numpy as np
 
-def bin_to_arr(filename, f):
+def bin_to_arr(filename, format):
     """
     Read binary data into array
     """
 
     with(open(filename, 'rb')) as input:
-        myiter = struct.iter_unpack(f, input.read())
+        myiter = struct.iter_unpack(format, input.read())
 
         arr = []
         for i in myiter:
@@ -38,9 +38,14 @@ def deep_get(dictionary, keys, default=None):
     return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
 
 
-def filter_volumes_with_normal(entities, ref_normals):
-    print("Started Filtering")
+def filter_volumes_with_normal(entities, ref_normal):
+    """
+    Given a list of 3D entities, and reference normal, return a list of entities with surfaces with normals pointing in the reference normal direction.
 
+    NOTE: Unfortunately seems broken. For some reason, gmsh normals aren't that predictable after performing fragmentation with 2D surfaces.
+    In my case, beads cut by the z+ plane didn't have a normal pointing in the z+ direction, even though every other direction followed the pattern.
+    It might eventually be fixed upstream.
+    """
     gmsh.model.occ.synchronize()
 
     output_entities = []
@@ -73,7 +78,7 @@ def filter_volumes_with_normal(entities, ref_normals):
                 # print("Surface: {tag}\nCurv: {curv}\nNormals:{normals}\nRefN:{ref}".format(tag=e[1], curv=curv, normals=normals, ref=np.tile(ref_normals, len(curv))))
 
                 # if np.array_equals(normals, np.tile(ref_normals,len(curv))):
-                if np.allclose(normals, np.tile(ref_normals,len(curv))):
+                if np.allclose(normals, np.tile(ref_normal,len(curv))):
                     output_entities.append(e)
                     # print("MATCH")
                     break
@@ -83,6 +88,12 @@ def filter_volumes_with_normal(entities, ref_normals):
     return output_entities
 
 def stackPeriodic(entities, periodic_directions:str, dx, dy, dz):
+    """
+    Given entities, stack them in the periodic_directions in combination.
+    With xyz periodicity, it should generate 26 * len(entities) new entities
+
+    It's a highly inefficient way to create periodic meshes, but worked as a first attempt.
+    """
 
     factory = gmsh.model.occ
 
@@ -103,6 +114,9 @@ def stackPeriodic(entities, periodic_directions:str, dx, dy, dz):
     return stacked_entities
 
 def get_surface_normals(entities):
+    """
+    Provided a list of 2D dimtags, return a list of normals to the surfaces
+    """
     output = []
     for surface in entities:
         points = gmsh.model.getBoundary([surface], False, False, True)
@@ -123,20 +137,11 @@ def get_surface_normals(entities):
 
     return output
 
-
-            # print(face, ': ', normals)
-
-
-def stackMinimal(packedBed, container, periodic_directions='xyz'):
+def testMesh():
     factory = gmsh.model.occ
-    fragmented, fmap = factory.fragment(packedBed.asDimTags(), container.asDimTags(), False, False)
-    pass
-
-
-
-
-
-
-
-
+    factory.synchronize()
+    ent = gmsh.model.getEntities(0)
+    gmsh.model.mesh.setSize(ent, 0.2)
+    gmsh.model.mesh.generate(2)
+    gmsh.write("test.vtk")
 
