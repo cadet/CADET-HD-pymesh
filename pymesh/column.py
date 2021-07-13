@@ -51,7 +51,6 @@ class Column:
 
         ## Extract container faces
         container_faces = gmsh.model.getBoundary(container.asDimTags(), combined=False, oriented=False)
-        all_beads = packedBed.asDimTags()
 
         # Dilate container faces to fully cut through particles
         for e in container_faces:
@@ -65,18 +64,21 @@ class Column:
         ##      (Tried filtering beads by cut surfaces, but that seems to be buggy)
         ## Store in dict as {faceDimTag : [cut_beads_dimtags]}
         for face in container_faces:
-            fragmented, fmap = factory.fragment(all_beads, [face], removeObject=False, removeTool=True)
+            fragmented, fmap = factory.fragment(packedBed.asDimTags(), [face], removeObject=False, removeTool=True)
 
             cut_beads =[]
-            for e,f in zip(all_beads + [face], fmap):
+
+            ## For every original (e) and fragmented (f) item:
+            for e,f in zip(packedBed.asDimTags() + [face], fmap):
                 # print(e, " -> ", f)
                 # if e[0] ==3 and len(f) > 1:
-                if len(f) > 1:
-                    if e[0] == 3:
-                        cut_beads.append(e)
-                    # print(f)
-                        factory.remove(f, recursive=True)
 
+                if len(f) > 1:                                  ## Particles that were split by the plane
+                    if e[0] == 3:                               ## Volumes, not surfaces (plane fragments)
+                        cut_beads.append(e)                     ## Save original bead to list
+                        factory.remove(f, recursive=True)       ## Remove 3D Fragments
+
+            ## Remove 2D fragments
             for e in fragmented:
                 if e[0] == 2:
                     factory.remove([e], recursive=True)
@@ -120,19 +122,8 @@ class Column:
 
         allbeads = packedBed.asDimTags() + copied_beads
 
-        fragmented, fmap = factory.fragment(allbeads, container.asDimTags(), removeObject=False, removeTool=False)
+        self.fragment(allbeads, container.asDimTags(), removeObject=True, removeTool=True, copyObject=copy, cleanFragments=True)
 
-        all = factory.getEntities(dim=3)
-        for e in all:
-            if e not in fmap[-1]:
-                factory.remove([e], recursive=True)
-
-        factory.synchronize()
-
-        ent = gmsh.model.getEntities(0)
-        gmsh.model.mesh.setSize(ent, 0.2)
-        gmsh.model.mesh.generate(2)
-        gmsh.write("dilatedboundaries.vtk")
 
         import sys; sys.exit() ;
 
@@ -304,39 +295,31 @@ class Column:
         import sys
         sys.exit(0)
 
-    def fragment(self, container, packedBed, copy=False):
+    def fragment(self, object, tool, copyObject=False, copyTool=False, removeObject=False, removeTool=False, cleanFragments=False, cleanAll=False):
         """
-        Given a container and packed bed, perform boolean operations and generate one fragmented column
+        Given a container and packed bed, perform boolean operations and generate one fragmented column.
+        When the container is the tool, the end of the fmap contains the mapping of the container to the
+        many volumes it is fragmented into. This is the only thing that matters in our case, hence we remove
+        all other volumes to clean up the model.
         """
         factory = gmsh.model.occ
 
-        packedBedDimTags = packedBed.asCopyDimTags() if copy else packedBed.asDimTags()
-        fragmented, _ = factory.fragment(container.asDimTags(), packedBedDimTags)
+        object = factory.copy(object) if copyObject else object
+        tool = factory.copy(tool) if copyTool else tool
 
-        # Tolerance for bbox.
-        eps = 1e-3
+        fragmented, fmap = factory.fragment(object, tool, removeObject=removeObject, removeTool=removeTool)
 
-        # Also see gmsh options
-        #       - Geometry.OCCBoundsUseSTL,
-        #       - Mesh.StlAngularDeflection, and
-        #       - Mesh.StlLinearDeflection
+        if cleanFragments:
+            print("Cleaning Fragments")
+            factory.remove([e for e in fragmented if e not in fmap[-1]], recursive=True)
 
-        size = container.size
-        # entitiesInBox = gmsh.model.getEntitiesInBoundingBox(
-        entitiesInBox = factory.getEntitiesInBoundingBox(
-                size[0]-eps, size[1]-eps, size[2]-eps,
-                size[0]+size[3]+eps,
-                size[1]+size[4]+eps,
-                size[2]+size[5]+eps,
-                dim=3
-                )
+        if cleanAll:
+            all = factory.getEntities(dim=3)
+            factory.remove([e for e in all if e not in fmap[-1]], recursive=True)
 
-        for e in entitiesInBox:
-            fragmented.remove(e)
+        self.entities = fmap[-1][:]
 
-        factory.remove(fragmented, recursive=True)
-
-        self.entities = entitiesInBox
+        return self.entities
 
     def separate_bounding_surfaces(self):
         pass
