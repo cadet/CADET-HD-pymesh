@@ -1,0 +1,36 @@
+packing:
+  file: 
+    name: /home/jayghoshter/simulations/packing/singlebead.xyzd
+    type: binary 
+    dataformat: <f
+  nbeads: 100
+  zbot: 0.0
+  ztop: 100.0
+  scaling_factor: 1
+  transform: 'auto'
+  particles:
+    scale: True
+    scaling_factor: 0.9997
+    bridge: False
+container:
+  shape: box
+  size: [ 0, 0, 0, 1, 1, 1]
+  inlet_length: 1.5
+  outlet_length: 1.5
+  periodicity: False
+mesh:
+  size: 0.2
+  reference_particle_radius: 'avg'
+  algorithm: 5
+  algorithm3D: 10
+  generate: 3
+  scaling_factor: 1e-4
+output:
+  filename: mesh.vtk
+  fragments: True
+  generic: True
+  particles: True
+gmsh:
+general: 
+  dryrun: False 
+
