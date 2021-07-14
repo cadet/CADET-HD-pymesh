@@ -20,7 +20,7 @@ class Container:
     def __init__(self, config):
 
         self.config   = config
-        self.shape    = config.get('container.shape')
+        self.shape    = config.get('container.shape', 'box')
         self.size     = config.get('container.size')
         self.entities = []
         self.generate()

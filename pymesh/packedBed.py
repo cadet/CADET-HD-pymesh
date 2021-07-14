@@ -24,14 +24,13 @@ class PackedBed:
     def __init__(self, config):
         self.config = config
 
-        self.fname                               = config.get('packing.file.name')
-        self.dataformat                          = config.get('packing.file.dataformat')
-        self.zBot                                = config.get('packing.zbot')
-        self.zTop                                = config.get('packing.ztop')
+        self.fname                               = config.get('packing.file.name', 'packing.xyzd')
+        self.dataformat                          = config.get('packing.file.dataformat', '<d')
+        self.zBot                                = config.get('packing.zbot', 0)
+        self.zTop                                = config.get('packing.ztop', 0)
         self.nBeads                              = config.get('packing.nbeads', 0)
-        self.scaling_factor                      = config.get('packing.scaling_factor')
-        self.particles_scaling_factor            = config.get('packing.particles.scaling_factor')
-        self.periodic                            = config.get('container.periodic')
+        self.scaling_factor                      = config.get('packing.scaling_factor', 1)
+        self.particles_scaling_factor            = config.get('packing.particles.scaling_factor', 1)
 
         self.mesh_size                           = config.get('mesh.size', 0.2)
         self.mesh_size_in                        = config.get('mesh.sizein', self.mesh_size)

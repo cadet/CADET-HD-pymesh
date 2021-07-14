@@ -17,20 +17,18 @@ from pathlib import Path
 class Model:
 
     def __init__(self, config):
-        # self.config = config
 
         self.container_periodicity = config.get('container.periodicity', '')
-        self.container_linked = config.get('container.linked')
+        self.container_linked      = config.get('container.linked', False)
+        self.container_size        = config.get('container.size')
 
-        self.container_size= config.get('container.size')
+        ## To be used with container.size = auto, or container.linked = True
+        self.inlet_length          = config.get('container.inlet_length', 0)
+        self.outlet_length         = config.get('container.outlet_length', 0)
 
-        ## To be used with container.size == auto, or container.linked = True
-        self.inlet_length = config.get('container.inlet_length')
-        self.outlet_length = config.get('container.outlet_length')
-
-        self.fname = config.get('output.filename', 'output.vtk')
-        self.mesh_size = config.get('mesh.size', 0.2)
-        self.mesh_generate = config.get('mesh.generate', 3)
+        self.fname                 = config.get('output.filename', 'output.vtk')
+        self.mesh_size             = config.get('mesh.size', 0.2)
+        self.mesh_generate         = config.get('mesh.generate', 3)
 
         column_container = Container(config)
         self.packedBed = PackedBed(config)
