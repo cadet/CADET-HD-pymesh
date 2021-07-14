@@ -52,9 +52,10 @@ class Column:
 
         self.fragment(packedBed.asDimTags(), container.asDimTags(), copyObject=copy, removeObject=True, removeTool=True, cleanFragments=True)
 
-        if periodic:
-            self.separate_bounding_surfaces()
+        self.separate_volumes()
+        self.separate_bounding_surfaces()
 
+        if periodic:
             dx = container.size[3]
             dy = container.size[4]
             dz = container.size[5]
@@ -187,6 +188,11 @@ class Column:
 
         return self.entities
 
+    def separate_volumes(self):
+        self.volumes.update({'interstitial': [ self.entities[-1][1] ]})
+        self.volumes.update({'particles': [ tag for _, tag in self.entities[:-1] ]})
+
+
     def separate_bounding_surfaces(self):
         """
         Given a fragmented 3D column, extract bounding surfaces and separate them based on their normals in the cardinal directions.
@@ -210,19 +216,19 @@ class Column:
         for s,n in zip(bounding_surfaces, normals):
 
             if np.array_equal(n,[-1,0,0]):
-                xm.append(s)
+                xm.append(s[1])
             elif np.array_equal(n,[1,0,0]):
-                xp.append(s)
+                xp.append(s[1])
             elif np.array_equal(n,[0,-1,0]):
-                ym.append(s)
+                ym.append(s[1])
             elif np.array_equal(n,[0,1,0]):
-                yp.append(s)
+                yp.append(s[1])
             elif np.array_equal(n,[0,0,-1]):
-                zm.append(s)
+                zm.append(s[1])
             elif np.array_equal(n,[0,0,1]):
-                zp.append(s)
+                zp.append(s[1])
             elif np.array_equal(n,[0,0,0]):
-                beads.append(s)
+                beads.append(s[1])
 
         self.walls.update({'x-': xm})
         self.walls.update({'x+': xp})
@@ -231,7 +237,8 @@ class Column:
         self.walls.update({'z-': zm})
         self.walls.update({'z+': zp})
 
-        self.surfaces.update({'beads': beads})
+        self.surfaces.update({'particles': beads})
+
         self.surfaces.update({'inlet': zm})
         self.surfaces.update({'outlet': zp})
         self.surfaces.update({'walls': xm + xp + ym + yp})
@@ -266,16 +273,18 @@ class Column:
         ## Terminology: sm = surface-minus, sp = surface-plus
         ## Mask the bounding box in the perDir direction and compare
         for sm in sLeft:
-            bboxm = gmsh.model.getBoundingBox(sm[0], sm[1])
+            bboxm = gmsh.model.getBoundingBox(2, sm)
             bboxm_masked = ma.masked_array(bboxm, mask=mask)
             for sp in sRight:
-                bboxp = gmsh.model.getBoundingBox(sp[0], sp[1])
+                bboxp = gmsh.model.getBoundingBox(2, sp)
                 bboxp_masked = ma.masked_array(bboxp, mask=mask)
                 if np.allclose(bboxm_masked, bboxp_masked):
-                    gmsh.model.mesh.setPeriodic(2, [sp[1]], [sm[1]], affineTranslation)
+                    gmsh.model.mesh.setPeriodic(2, [sp], [sm], affineTranslation)
 
     def set_physical_groups(self):
         gmsh.model.removePhysicalGroups()
+
+        print("Setting physical:", self.surfaces.get('inlet'))
 
         gmsh.model.addPhysicalGroup(2, self.surfaces.get('inlet'), 1)
         gmsh.model.addPhysicalGroup(2, self.surfaces.get('outlet'), 2)

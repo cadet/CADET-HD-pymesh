@@ -92,7 +92,7 @@ class Model:
 
         gmsh.write(fname)
 
-        # self.column.write(basename + '_column' + extension)
+        self.column.write(basename + '_column' + extension)
 
         if self.container_linked :
             self.inlet.write(basename + '_inlet' + extension)
