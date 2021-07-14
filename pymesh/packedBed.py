@@ -183,9 +183,10 @@ class PackedBed:
         container_faces = gmsh.model.getBoundary(container.asDimTags(), combined=False, oriented=False)
 
         # Dilate container faces to fully cut through particles
+        df = 5          # dilation factor
         for e in container_faces:
             x,y,z = factory.getCenterOfMass(e[0], e[1])
-            factory.dilate([e], x,y,z, 3,3,3)
+            factory.dilate([e], x,y,z, df, df, df)
 
         face_cutbeads = {}
 
@@ -194,6 +195,8 @@ class PackedBed:
         ##      (Tried filtering beads by cut surfaces, but that seems to be buggy)
         ## Store in dict as {faceDimTag : [cut_beads_dimtags]}
         for face in container_faces:
+
+            ## Fragment the packedBed, do not delete the original object.
             fragmented, fmap = factory.fragment(self.asDimTags(), [face], removeObject=False, removeTool=True)
 
             cut_beads =[]
