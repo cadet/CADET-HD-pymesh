@@ -18,7 +18,7 @@ from itertools import combinations
 
 class Column:
 
-    def __init__(self, container, packedBed, copy=False, periodic=False):
+    def __init__(self, container, packedBed, copy=False, periodicity:str=''):
         ## 1. Operate (fuse/fragment...)
         ## 2. Separate Surfaces
         ## 3. Match Periodic
@@ -45,26 +45,27 @@ class Column:
                 'particles': []
         }
 
-        ## NOTE: Moved to PackedBed, invoked in Model
-        # if periodic:
-        #     self.operate_periodic(container, packedBed, copy)
-        # else:
-
         self.fragment(packedBed.asDimTags(), container.asDimTags(), copyObject=copy, removeObject=True, removeTool=True, cleanFragments=True)
 
         self.separate_volumes()
         self.separate_bounding_surfaces()
 
-        if periodic:
-            dx = container.size[3]
-            dy = container.size[4]
-            dz = container.size[5]
+        dx = container.size[3]
+        dy = container.size[4]
+        dz = container.size[5]
 
-            affineTranslationX = [1, 0, 0, dx, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
-            affineTranslationY = [1, 0, 0, 0, 0, 1, 0, dy, 0, 0, 1, 0, 0, 0, 0, 1]
-            affineTranslationZ = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, dz, 0, 0, 0, 1]
+        affineTranslationX = [1, 0, 0, dx, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+        affineTranslationY = [1, 0, 0, 0, 0, 1, 0, dy, 0, 0, 1, 0, 0, 0, 0, 1]
+        affineTranslationZ = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, dz, 0, 0, 0, 1]
 
+        if 'x' in periodicity:
             self.match_periodic_surfaces(self.walls.get('x-'), self.walls.get('x+'), 'x', affineTranslationX)
+
+        if 'y' in periodicity:
+            self.match_periodic_surfaces(self.walls.get('y-'), self.walls.get('y+'), 'y', affineTranslationY)
+
+        if 'z' in periodicity:
+            self.match_periodic_surfaces(self.walls.get('z-'), self.walls.get('z+'), 'z', affineTranslationZ)
 
     def operate_periodic(self, container, packedBed, copy=False):
         """

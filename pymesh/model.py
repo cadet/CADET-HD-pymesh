@@ -20,7 +20,7 @@ class Model:
     def __init__(self, config):
         self.config = config
 
-        self.container_periodic = deep_get(self.config, 'container.periodic')
+        self.container_periodicity = deep_get(self.config, 'container.periodicity', '')
         self.container_linked = deep_get(self.config, 'container.linked')
 
         self.container_size= deep_get(self.config, 'container.size')
@@ -29,13 +29,16 @@ class Model:
         self.inlet_length = deep_get(self.config, 'container.inlet_length')
         self.outlet_length = deep_get(self.config, 'container.outlet_length')
 
-        self.periodic = deep_get(self.config, 'container.periodic')
-
         column_container = Container(config)
         self.packedBed = PackedBed(config)
 
         ## Stack beads
         self.packedBed.stack_by_cut_planes(column_container)
+
+        ## NOTE: Column periodicity is taken directly from input. If linked=True, ensure that column is periodic in Z
+        ## inlet and outlet periodicity ignores Z, always
+        column_periodicity = self.container_periodicity + 'z' if self.container_linked and 'z' not in self.container_periodicity else self.container_periodicity
+        inout_periodicity = self.container_periodicity.replace('z', '')
 
         if self.container_linked :
             inlet_container_config = {
@@ -52,7 +55,7 @@ class Model:
                     }
             }
             inlet_container = Container(inlet_container_config)
-            self.inlet = Column(inlet_container, self.packedBed, copy=True, periodic=True)
+            self.inlet = Column(inlet_container, self.packedBed, copy=True, periodicity=inout_periodicity)
 
             outlet_container_config = {
                     "container": {
@@ -68,12 +71,9 @@ class Model:
                     }
             }
             outlet_container = Container(outlet_container_config)
-            self.outlet = Column(outlet_container, self.packedBed, copy=True, periodic=True)
+            self.outlet = Column(outlet_container, self.packedBed, copy=True, periodicity=inout_periodicity)
 
-        self.column = Column(column_container, self.packedBed, copy=False, periodic=self.container_periodic)
-
-        # self.mesh()
-        # self.write()
+        self.column = Column(column_container, self.packedBed, copy=False, periodicity=column_periodicity)
 
     def set_mesh_size(self):
         modelEntities = gmsh.model.getEntities()
