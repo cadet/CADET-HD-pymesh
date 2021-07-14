@@ -177,7 +177,7 @@ class PackedBed:
         dy = container.size[4]
         dz = container.size[5]
 
-        ## Extract container faces
+        ## NOTE: Extract ALL container faces, regardless of periodicity directions
         container_faces = gmsh.model.getBoundary(container.asDimTags(), combined=False, oriented=False)
 
         # Dilate container faces to fully cut through particles
@@ -235,8 +235,8 @@ class PackedBed:
 
 
             ## For every combination of the cut planes,
-            ##      calculate the combined normal,
-            ##      translate a copy of the bead by -dx*normal_dir.
+            ##      - calculate the combined normal,
+            ##      - translate a copy of the bead by -dx*normal_dir.
             for combo in cut_plane_combos:
                 inormals = get_surface_normals(combo)
                 combo_normal = [0, 0, 0]

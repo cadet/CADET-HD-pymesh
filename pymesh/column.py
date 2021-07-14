@@ -32,12 +32,9 @@ class Column:
         }
 
         self.walls = {
-            'x-': [],
-            'x+': [],
-            'y-': [],
-            'y+': [],
-            'z-': [],
-            'z+': [],
+            'x-': [], 'x+': [],
+            'y-': [], 'y+': [],
+            'z-': [], 'z+': [],
         }
 
         self.volumes = {
@@ -246,18 +243,11 @@ class Column:
         Match surfaces on sleft and sright by bounding box. Then setPeriodic().
         """
 
-        ## TODO: Let affineTranslation be calculated in function based on perDir and a provided dx?
-
-
         print("Matching periodic in", perDir)
         print( len(sLeft), len(sRight) )
 
         if len(sLeft) != len(sRight):
             raise(AssertionError)
-
-        # affineTranslationX = [1, 0, 0, distance, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
-        # affineTranslationY = [1, 0, 0, 0, 0, 1, 0, distance, 0, 0, 1, 0, 0, 0, 0, 1]
-        # affineTranslationZ = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, distance, 0, 0, 0, 1]
 
         affineTranslation = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
 
