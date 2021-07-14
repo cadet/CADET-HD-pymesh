@@ -30,13 +30,6 @@ def grouper(iterable, n):
            return
        yield chunk
 
-def deep_get(dictionary, keys, default=None):
-    """
-    Simpler syntax to get deep values from a dictionary
-    > deep_get(dict, 'key1.key2.key3', defaultValue)
-    """
-    return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), dictionary)
-
 
 def filter_volumes_with_normal(entities, ref_normal):
     """

@@ -10,7 +10,6 @@ contract:
 from pymesh.packedBed import PackedBed
 from pymesh.container import Container
 from pymesh.column import Column
-from pymesh.tools import deep_get
 
 import gmsh
 from pathlib import Path
@@ -18,16 +17,20 @@ from pathlib import Path
 class Model:
 
     def __init__(self, config):
-        self.config = config
+        # self.config = config
 
-        self.container_periodicity = deep_get(self.config, 'container.periodicity', '')
-        self.container_linked = deep_get(self.config, 'container.linked')
+        self.container_periodicity = config.get('container.periodicity', '')
+        self.container_linked = config.get('container.linked')
 
-        self.container_size= deep_get(self.config, 'container.size')
+        self.container_size= config.get('container.size')
 
         ## To be used with container.size == auto, or container.linked = True
-        self.inlet_length = deep_get(self.config, 'container.inlet_length')
-        self.outlet_length = deep_get(self.config, 'container.outlet_length')
+        self.inlet_length = config.get('container.inlet_length')
+        self.outlet_length = config.get('container.outlet_length')
+
+        self.fname = config.get('output.filename', 'output.vtk')
+        self.mesh_size = config.get('mesh.size', 0.2)
+        self.mesh_generate = config.get('mesh.generate', 3)
 
         column_container = Container(config)
         self.packedBed = PackedBed(config)
@@ -82,20 +85,18 @@ class Model:
 
     def set_mesh_size(self):
         modelEntities = gmsh.model.getEntities()
-        size = deep_get(self.config, 'mesh.size', 0.2)
-        gmsh.model.mesh.setSize(modelEntities, size)
+        gmsh.model.mesh.setSize(modelEntities, self.mesh_size)
 
     def mesh(self):
         gmsh.model.occ.synchronize()
         self.set_mesh_size()
-        gmsh.model.mesh.generate(deep_get(self.config, 'mesh.generate', 3))
+        gmsh.model.mesh.generate()
 
     def write(self):
-        fname = deep_get(self.config, 'output.filename', 'output.vtk')
-        basename = Path(fname).stem
-        extension = Path(fname).suffix
+        basename = Path(self.fname).stem
+        extension = Path(self.fname).suffix
 
-        gmsh.write(fname)
+        gmsh.write(self.fname)
 
         self.column.write(basename + '_column' + extension)
 

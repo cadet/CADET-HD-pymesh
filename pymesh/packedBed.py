@@ -9,7 +9,7 @@ contract:
 
 """
 
-from pymesh.tools import bin_to_arr, grouper, deep_get, get_surface_normals
+from pymesh.tools import bin_to_arr, grouper, get_surface_normals
 from pymesh.bead import Bead
 
 import numpy as np
@@ -24,17 +24,23 @@ class PackedBed:
     def __init__(self, config):
         self.config = config
 
-        self.fname = deep_get(self.config, 'packing.file.name')
-        self.dataformat = deep_get(self.config, 'packing.file.dataformat')
-        self.zBot = deep_get(self.config, 'packing.zbot')
-        self.zTop = deep_get(self.config, 'packing.ztop')
-        self.nBeads = deep_get(self.config, 'packing.nbeads', 0)
-        self.scaling_factor = deep_get(self.config, 'packing.scaling_factor')
-        self.particles_scaling_factor = deep_get(self.config, 'packing.particles.scaling_factor')
-        self.periodic= deep_get(self.config, 'container.periodic')
+        self.fname                               = config.get('packing.file.name')
+        self.dataformat                          = config.get('packing.file.dataformat')
+        self.zBot                                = config.get('packing.zbot')
+        self.zTop                                = config.get('packing.ztop')
+        self.nBeads                              = config.get('packing.nbeads', 0)
+        self.scaling_factor                      = config.get('packing.scaling_factor')
+        self.particles_scaling_factor            = config.get('packing.particles.scaling_factor')
+        self.periodic                            = config.get('container.periodic')
+
+        self.mesh_size                           = config.get('mesh.size', 0.2)
+        self.mesh_size_in                        = config.get('mesh.sizein', self.mesh_size)
+        self.mesh_size_out                       = config.get('mesh.sizeout', self.mesh_size)
+        self.mesh_field_threshold_rad_min_factor =  config.get('mesh.field.threshold.rad_min_factor', 1)
+        self.mesh_field_threshold_rad_max_factor =  config.get('mesh.field.threshold.rad_max_factor', 1)
 
         self.read_packing()
-        if deep_get(self.config, 'packing.auto_translate'):
+        if config.get('packing.auto_translate'):
             self.moveBedtoCenter()
         self.generate()
         ## TODO: Fix mesh_fields for copied/stacked beads for periodic problems
@@ -135,25 +141,22 @@ class PackedBed:
         factory = gmsh.model.occ
         field = gmsh.model.mesh.field
 
-        meshsize = deep_get(self.config, 'mesh.size', 0.2)
-        meshsizeout = deep_get(self.config, 'mesh.sizeout', meshsize)
-        meshsizein = deep_get(self.config, 'mesh.sizein', meshsize)
 
         self.center_points = []
         for bead in self.beads:
-            ctag = factory.addPoint(bead.x, bead.y, bead.z, meshsizein)
+            ctag = factory.addPoint(bead.x, bead.y, bead.z, self.mesh_size_in)
             self.center_points.append(ctag)
 
             self.dtag = field.add('Distance')
             field.setNumbers(self.dtag, 'PointsList', [self.dtag])
 
-            distmin = deep_get(self.config, 'mesh.field.threshold.rad_min_factor', 1) * bead.r
-            distmax = deep_get(self.config, 'mesh.field.threshold.rad_max_factor', 1) * bead.r
+            distmin = self.mesh_field_threshold_rad_min_factor * bead.r
+            distmax = self.mesh_field_threshold_rad_max_factor * bead.r
 
             self.ttag = field.add('Threshold')
             field.setNumber(self.ttag, "InField", self.dtag);
-            field.setNumber(self.ttag, "SizeMin", meshsizein);
-            field.setNumber(self.ttag, "SizeMax", meshsizeout);
+            field.setNumber(self.ttag, "SizeMin", self.mesh_size_in);
+            field.setNumber(self.ttag, "SizeMax", self.mesh_size_out);
             field.setNumber(self.ttag, "DistMin", distmin);
             field.setNumber(self.ttag, "DistMax", distmax);
 

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from pymesh.configHandler import load_config, set_gmsh_defaults
+from pymesh.configHandler import ConfigHandler
 from pymesh.model import Model
 
 import argparse
@@ -11,12 +11,12 @@ def pymesh():
     ap.add_argument("file", help="Input file")
     args = vars(ap.parse_args())
 
-    config = load_config(args['file'])
+    config = ConfigHandler(args['file'])
 
     gmsh.initialize()
     gmsh.model.add("default")
 
-    set_gmsh_defaults(config)
+    config.set_gmsh_defaults()
 
     defaultModel = Model(config)
     defaultModel.mesh()

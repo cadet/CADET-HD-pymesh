@@ -10,8 +10,6 @@ Container class.
 
 """
 
-from pymesh.tools import deep_get
-
 import gmsh
 import sys
 
@@ -20,9 +18,10 @@ factory = gmsh.model.occ
 class Container:
 
     def __init__(self, config):
-        self.config = config
-        self.shape = deep_get(self.config, 'container.shape')
-        self.size = deep_get(self.config, 'container.size')
+
+        self.config   = config
+        self.shape    = config.get('container.shape')
+        self.size     = config.get('container.size')
         self.entities = []
         self.generate()
 
