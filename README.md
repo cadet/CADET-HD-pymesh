@@ -14,11 +14,11 @@ Plus a rewrite helps me reorganize the software at an architectural level.
     - [TASK] auto-size
 - periodic meshes
     - [DONE] non-stacked workflow
-    - surface separation
-    - match and set periodic
-- [PART] linked inlet-column-outlet sections
-    - actual periodicity pending
-- [TASK] mesh fields
+    - [DONE] surface separation
+    - [DONE] match and set periodic
+- [DONE] linked inlet-column-outlet sections
+    - [DONE] actual periodicity pending
+- [PART] mesh fields
 - [TASK] polydisperse mesh size adaptation
 - [TASK] porosity manipulation by bead addition/deletion
 - [TASK] bridges
