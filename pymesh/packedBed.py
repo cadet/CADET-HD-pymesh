@@ -9,11 +9,13 @@ contract:
 
 """
 
-from pymesh.tools import bin_to_arr, grouper, deep_get
+from pymesh.tools import bin_to_arr, grouper, deep_get, get_surface_normals
 from pymesh.bead import Bead
 
 import numpy as np
 import gmsh
+
+from itertools import combinations
 
 class PackedBed:
 
@@ -29,11 +31,13 @@ class PackedBed:
         self.nBeads = deep_get(self.config, 'packing.nbeads', 0)
         self.scaling_factor = deep_get(self.config, 'packing.scaling_factor')
         self.particles_scaling_factor = deep_get(self.config, 'packing.particles.scaling_factor')
+        self.periodic= deep_get(self.config, 'container.periodic')
 
         self.read_packing()
         if deep_get(self.config, 'packing.auto_translate'):
             self.moveBedtoCenter()
         self.generate()
+        ## TODO: Fix mesh_fields for copied/stacked beads for periodic problems
         self.set_mesh_fields()
 
     def read_packing(self):
@@ -152,3 +156,103 @@ class PackedBed:
             field.setNumber(self.ttag, "SizeMax", meshsizeout);
             field.setNumber(self.ttag, "DistMin", distmin);
             field.setNumber(self.ttag, "DistMax", distmax);
+
+    def stack_by_cut_planes(self, container):
+        """
+        Periodic packings need to be stacked to make them meshable
+        This method does it via cut planes of the column container.
+        1. Extract and Dilate container faces
+        2. Fragment serially and find which beads are cut by which faces
+        3. Copy and Translate beads based on normal of the cut plane
+
+        [TASK]
+        NOTE: This method was used because directly fragmenting objects messes with
+        surface normals somehow in gmsh/occt. Ideally, just fragment all at once and
+        filter beads by surface normals.
+        """
+        factory = gmsh.model.occ
+        factory.synchronize()
+
+        dx = container.size[3]
+        dy = container.size[4]
+        dz = container.size[5]
+
+        ## Extract container faces
+        container_faces = gmsh.model.getBoundary(container.asDimTags(), combined=False, oriented=False)
+
+        # Dilate container faces to fully cut through particles
+        for e in container_faces:
+            x,y,z = factory.getCenterOfMass(e[0], e[1])
+            factory.dilate([e], x,y,z, 3,3,3)
+
+        face_cutbeads = {}
+
+        ## Find which faces cut which beads
+        ##      Done in series because no way currently to say which face cut which bead otherwise
+        ##      (Tried filtering beads by cut surfaces, but that seems to be buggy)
+        ## Store in dict as {faceDimTag : [cut_beads_dimtags]}
+        for face in container_faces:
+            fragmented, fmap = factory.fragment(self.asDimTags(), [face], removeObject=False, removeTool=True)
+
+            cut_beads =[]
+
+            ## For every original (e) and fragmented (f) item:
+            for e,f in zip(self.asDimTags() + [face], fmap):
+                # print(e, " -> ", f)
+                # if e[0] ==3 and len(f) > 1:
+
+                if len(f) > 1:                                  ## Particles that were split by the plane
+                    if e[0] == 3:                               ## Volumes, not surfaces (plane fragments)
+                        cut_beads.append(e)                     ## Save original bead to list
+                        factory.remove(f, recursive=True)       ## Remove 3D Fragments
+
+            ## Remove 2D fragments
+            for e in fragmented:
+                if e[0] == 2:
+                    factory.remove([e], recursive=True)
+
+            face_cutbeads.update({face : cut_beads})
+
+
+        ## Find all cut beads, uniquely
+        joined_cut_beads = [x  for face in face_cutbeads.keys() for x in face_cutbeads[face]]
+        joined_cut_beads_tags = np.array([x[1] for x in joined_cut_beads])
+        joined_cut_beads_tags_unique, joined_cut_beads_counts = np.unique(joined_cut_beads_tags,return_counts=True)
+
+        copied_beads = []
+
+        for bead in joined_cut_beads_tags_unique:
+            ## Find all planes of cut
+            ## Ex: x0, y0
+            cut_planes = []
+            for face in face_cutbeads.keys():
+                if (3, bead) in face_cutbeads[face]:
+                    cut_planes.append(face)
+
+            ## Find all combinations of the cut planes
+            ## Ex:[(x0), (y0), (x0,y0)]
+            cut_plane_combos = [ x for i in range(1, len(cut_planes)+1) for x in combinations(cut_planes,i) ]
+
+
+            ## For every combination of the cut planes,
+            ##      calculate the combined normal,
+            ##      translate a copy of the bead by -dx*normal_dir.
+            for combo in cut_plane_combos:
+                inormals = get_surface_normals(combo)
+                combo_normal = [0, 0, 0]
+                ## TODO: Do this nicer
+                for inorm in inormals:
+                    combo_normal[0] = combo_normal[0] + inorm[0]
+                    combo_normal[1] = combo_normal[1] + inorm[1]
+                    combo_normal[2] = combo_normal[2] + inorm[2]
+                copied_bead = factory.copy([(3,bead)])
+                copied_beads.extend(copied_bead)
+                factory.translate(copied_bead, -combo_normal[0] * dx, -combo_normal[1] *dy, -combo_normal[2] * dz)
+                ## TODO: append to self.beads
+                # self.beads.append(Bead(bead.x - combo_normal[0] * dx,
+                #     bead.y - combo_normal[1] * dy,
+                #     bead.z - combo_normal[2] * dz,
+                #     bead.r))
+
+        # allbeads = self.asDimTags() + copied_beads
+        self.entities.extend([tag for _, tag in copied_beads])

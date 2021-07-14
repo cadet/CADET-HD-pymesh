@@ -29,7 +29,13 @@ class Model:
         self.inlet_length = deep_get(self.config, 'container.inlet_length')
         self.outlet_length = deep_get(self.config, 'container.outlet_length')
 
+        self.periodic = deep_get(self.config, 'container.periodic')
+
+        column_container = Container(config)
         self.packedBed = PackedBed(config)
+
+        ## Stack beads
+        self.packedBed.stack_by_cut_planes(column_container)
 
         if self.container_linked :
             inlet_container_config = {
@@ -64,7 +70,6 @@ class Model:
             outlet_container = Container(outlet_container_config)
             self.outlet = Column(outlet_container, self.packedBed, copy=True, periodic=True)
 
-        column_container = Container(config)
         self.column = Column(column_container, self.packedBed, copy=False, periodic=self.container_periodic)
 
         # self.mesh()
