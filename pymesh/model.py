@@ -32,13 +32,18 @@ class Model:
         column_container = Container(config)
         self.packedBed = PackedBed(config)
 
-        ## Stack beads
-        self.packedBed.stack_by_cut_planes(column_container)
-
         ## NOTE: Column periodicity is taken directly from input. If linked=True, ensure that column is periodic in Z
         ## inlet and outlet periodicity ignores Z, always
         column_periodicity = self.container_periodicity + 'z' if self.container_linked and 'z' not in self.container_periodicity else self.container_periodicity
         inout_periodicity = self.container_periodicity.replace('z', '')
+
+        ## Stack beads
+        ## NOTE: It does a full 3D stacking of beads intersecting with
+        ##      ALL the container walls, regardless of what the periodicity
+        ##      actually is, as long as it's not an empty string.
+        if column_periodicity:
+            self.packedBed.stack_by_cut_planes(column_container)
+
 
         if self.container_linked :
             inlet_container_config = {
