@@ -54,18 +54,14 @@ class Column:
         dy = container.size[4]
         dz = container.size[5]
 
-        affineTranslationX = [1, 0, 0, dx, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
-        affineTranslationY = [1, 0, 0, 0, 0, 1, 0, dy, 0, 0, 1, 0, 0, 0, 0, 1]
-        affineTranslationZ = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, dz, 0, 0, 0, 1]
-
         if 'x' in periodicity:
-            self.match_periodic_surfaces(self.walls.get('x-'), self.walls.get('x+'), 'x', affineTranslationX)
+            self.match_periodic_surfaces(self.walls.get('x-'), self.walls.get('x+'), 'x', dx)
 
         if 'y' in periodicity:
-            self.match_periodic_surfaces(self.walls.get('y-'), self.walls.get('y+'), 'y', affineTranslationY)
+            self.match_periodic_surfaces(self.walls.get('y-'), self.walls.get('y+'), 'y', dy)
 
         if 'z' in periodicity:
-            self.match_periodic_surfaces(self.walls.get('z-'), self.walls.get('z+'), 'z', affineTranslationZ)
+            self.match_periodic_surfaces(self.walls.get('z-'), self.walls.get('z+'), 'z', dz)
 
     def operate_periodic(self, container, packedBed, copy=False):
         """
@@ -245,7 +241,7 @@ class Column:
         self.surfaces.update({'walls': xm + xp + ym + yp})
 
 
-    def match_periodic_surfaces(self, sLeft, sRight, perDir, affineTranslation):
+    def match_periodic_surfaces(self, sLeft, sRight, perDir, distance):
         """
         Match surfaces on sleft and sright by bounding box. Then setPeriodic().
         """
@@ -259,15 +255,24 @@ class Column:
         if len(sLeft) != len(sRight):
             raise(AssertionError)
 
+        # affineTranslationX = [1, 0, 0, distance, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+        # affineTranslationY = [1, 0, 0, 0, 0, 1, 0, distance, 0, 0, 1, 0, 0, 0, 0, 1]
+        # affineTranslationZ = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, distance, 0, 0, 0, 1]
+
+        affineTranslation = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
+
         for s,t in zip(sLeft, sRight):
             print(s, ' -> ', t)
 
         if perDir == 'x':
             mask = [1, 0, 0 ] * 2
+            affineTranslation[3] = distance
         elif perDir == 'y':
             mask = [0, 1, 0 ] * 2
+            affineTranslation[7] = distance
         elif perDir == 'z':
             mask = [0, 0, 1 ] * 2
+            affineTranslation[11] = distance
         else:
             raise(ValueError)
 
