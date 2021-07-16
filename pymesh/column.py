@@ -47,18 +47,14 @@ class Column:
         self.separate_volumes()
         self.separate_bounding_surfaces()
 
-        dx = container.size[3]
-        dy = container.size[4]
-        dz = container.size[5]
-
         if 'x' in periodicity:
-            self.match_periodic_surfaces(self.walls.get('x-'), self.walls.get('x+'), 'x', dx)
+            self.match_periodic_surfaces(self.walls.get('x-'), self.walls.get('x+'), 'x', container.dx)
 
         if 'y' in periodicity:
-            self.match_periodic_surfaces(self.walls.get('y-'), self.walls.get('y+'), 'y', dy)
+            self.match_periodic_surfaces(self.walls.get('y-'), self.walls.get('y+'), 'y', container.dy)
 
         if 'z' in periodicity:
-            self.match_periodic_surfaces(self.walls.get('z-'), self.walls.get('z+'), 'z', dz)
+            self.match_periodic_surfaces(self.walls.get('z-'), self.walls.get('z+'), 'z', container.dz)
 
     def operate_periodic(self, container, packedBed, copy=False):
         """

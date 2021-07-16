@@ -28,6 +28,9 @@ class Container:
         if self.shape == 'box':
             if isinstance(self.size, list):
                 self.entities.append(factory.addBox(*self.size))
+                self.dx = self.size[3]
+                self.dy = self.size[4]
+                self.dz = self.size[5]
             else:
                 print("ERROR: container.size must be a list", file=sys.stderr)
                 raise(NotImplementedError)
