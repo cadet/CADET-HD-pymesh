@@ -7,6 +7,9 @@ contract:
     - must provide easy access to deep/nested values (deep_get -> get)
     - must set gmsh default values
     - [TASK] must set dynamic gmsh defaults from config.gmsh
+    - [NOTE] By current design, there are no global defaults for input options.
+        Defaults are set within callers.
+
 """
 import yaml
 import gmsh
@@ -23,7 +26,7 @@ class ConfigHandler:
     def get(self, keys, default=None):
         """
         Simpler syntax to get deep values from a dictionary
-        > deep_get(dict, 'key1.key2.key3', defaultValue)
+        > config.get('key1.key2.key3', defaultValue)
         """
         return reduce(lambda d, key: d.get(key, default) if isinstance(d, dict) else default, keys.split("."), self.config)
 
