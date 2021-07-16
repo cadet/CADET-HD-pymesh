@@ -30,6 +30,21 @@ def grouper(iterable, n):
            return
        yield chunk
 
+def get_volume_normals(entities):
+    """
+    Given a list of volume entities, calculate all normals for all surfaces
+    Return a list of list of normals.
+    """
+    gmsh.model.occ.synchronize()
+
+    output = []
+
+    for e in entities:
+        boundaries = gmsh.model.getBoundary([e], False, False, False)
+        normals = get_surface_normals(boundaries)
+        output.append(normals)
+
+    return output
 
 def filter_volumes_with_normal(entities, ref_normal):
     """
@@ -147,8 +162,8 @@ def testMesh(fname, size=0.2):
 def remove_all_except(entities):
     factory = gmsh.model.occ
     all = factory.getEntities(dim=3)
-    factory.remove(all)
-    all2 = factory.getEntities(dim=2)
-    factory.remove([e for e in all2 if e not in entities], recursive=True)
-    factory.remove(factory.getEntities(1) )
-    factory.remove(factory.getEntities(0) )
+    factory.remove([e for e in all if e not in entities], recursive=True)
+    # all2 = factory.getEntities(dim=2)
+    # factory.remove([e for e in all2 if e not in entities], recursive=True)
+    # factory.remove(factory.getEntities(1) )
+    # factory.remove(factory.getEntities(0) )
