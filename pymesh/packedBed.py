@@ -245,12 +245,7 @@ class PackedBed:
             ##      - translate a copy of the bead by -dx*normal_dir.
             for combo in cut_plane_combos:
                 inormals = get_surface_normals(combo)
-                combo_normal = [0, 0, 0]
-                ## TODO: Do this nicer
-                for inorm in inormals:
-                    combo_normal[0] = combo_normal[0] + inorm[0]
-                    combo_normal[1] = combo_normal[1] + inorm[1]
-                    combo_normal[2] = combo_normal[2] + inorm[2]
+                combo_normal = [sum(i) for i in zip(*inormals)]
                 copied_bead = factory.copy([(3,bead)])
                 copied_beads.extend(copied_bead)
                 factory.translate(copied_bead, -combo_normal[0] * dx, -combo_normal[1] *dy, -combo_normal[2] * dz)
@@ -288,11 +283,7 @@ class PackedBed:
             # print( vol, ' -> ', ns)
             output = []
             for isc in nsc:
-                combo_normal = [0, 0, 0]
-                for inorm in isc:
-                    combo_normal[0] = combo_normal[0] + inorm[0]
-                    combo_normal[1] = combo_normal[1] + inorm[1]
-                    combo_normal[2] = combo_normal[2] + inorm[2]
+                combo_normal = [sum(i) for i in zip(isc)]
                 # print(combo_normal)
                 output.append(combo_normal)
             index = None
