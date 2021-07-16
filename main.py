@@ -11,7 +11,8 @@ def pymesh():
     ap.add_argument("file", help="Input file")
     args = vars(ap.parse_args())
 
-    config = ConfigHandler(args['file'])
+    config = ConfigHandler()
+    config.read(args['file'])
 
     gmsh.initialize()
     gmsh.model.add("default")

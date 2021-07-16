@@ -18,10 +18,16 @@ from functools import reduce
 
 class ConfigHandler:
 
-    def __init__(self, fname):
+    def __init__(self):
         self.config = {}
+
+    def read(self, fname):
         with open(fname, 'r') as fp:
             self.config = yaml.load(fp, Loader=yaml.FullLoader)
+
+    def update(self, dic):
+        self.config.update(dic)
+        return self
 
     def get(self, keys, default=None):
         """
@@ -46,7 +52,3 @@ class ConfigHandler:
                 gmsh.option.setNumber("Mesh.StlAngularDeflection" , 0.08 )
                 gmsh.option.setNumber("Mesh.StlLinearDeflection"  , 0.0005)
 
-        # gmsh.option.setNumber("Geometry.OCCFixDegenerated"  , 1)
-        # gmsh.option.setNumber("Geometry.OCCFixSmallEdges"  , 1)
-        # gmsh.option.setNumber("Geometry.OCCFixSmallFaces"  , 1)
-        # gmsh.option.setNumber("Mesh.MeshSizeFromCurvature"  , 1)

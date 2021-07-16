@@ -10,6 +10,7 @@ contract:
 from pymesh.packedBed import PackedBed
 from pymesh.container import Container
 from pymesh.column import Column
+from pymesh.configHandler import ConfigHandler
 
 import sys
 
@@ -56,35 +57,36 @@ class Model:
                 raise(ValueError)
 
         if self.container_linked :
-            inlet_container_config = {
-                    "container": {
-                        "shape": "box",
-                        "size" : [
-                            self.container_size[0],
-                            self.container_size[1],
-                            self.container_size[2] - self.inlet_length,
-                            self.container_size[3],
-                            self.container_size[4],
-                            self.inlet_length
-                            ]
+            inlet_container_config = ConfigHandler().update({
+                "container": {
+                    "shape": "box",
+                    "size" : [
+                        self.container_size[0],
+                        self.container_size[1],
+                        self.container_size[2] - self.inlet_length,
+                        self.container_size[3],
+                        self.container_size[4],
+                        self.inlet_length
+                        ]
                     }
-            }
+                })
+
             inlet_container = Container(inlet_container_config)
             self.inlet = Column(inlet_container, self.packedBed, copy=True, periodicity=inout_periodicity)
 
-            outlet_container_config = {
-                    "container": {
-                        "shape": "box",
-                        "size" : [
-                            self.container_size[0],
-                            self.container_size[1],
-                            self.container_size[2] + self.container_size[5],
-                            self.container_size[3],
-                            self.container_size[4],
-                            self.outlet_length
-                            ],
+            outlet_container_config = ConfigHandler().update({
+                "container": {
+                    "shape": "box",
+                    "size" : [
+                        self.container_size[0],
+                        self.container_size[1],
+                        self.container_size[2] + self.container_size[5],
+                        self.container_size[3],
+                        self.container_size[4],
+                        self.outlet_length
+                        ],
                     }
-            }
+                })
             outlet_container = Container(outlet_container_config)
             self.outlet = Column(outlet_container, self.packedBed, copy=True, periodicity=inout_periodicity)
 
