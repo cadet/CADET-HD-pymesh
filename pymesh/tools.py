@@ -161,9 +161,19 @@ def testMesh(fname, size=0.2):
 
 def remove_all_except(entities):
     factory = gmsh.model.occ
-    all = factory.getEntities(dim=3)
-    factory.remove([e for e in all if e not in entities], recursive=True)
-    # all2 = factory.getEntities(dim=2)
-    # factory.remove([e for e in all2 if e not in entities], recursive=True)
-    # factory.remove(factory.getEntities(1) )
-    # factory.remove(factory.getEntities(0) )
+    print(entities)
+    dims = [ dim for dim,_ in entities ]
+    ## If all dims are same
+    if dims.count(dims[0]) == len(dims):
+        if dims[0] == 3:
+            all = factory.getEntities(dim=3)
+            factory.remove([e for e in all if e not in entities], recursive=True)
+        elif dims[0] == 2:
+            factory.remove(factory.getEntities(dim=3))
+            factory.remove([e for e in factory.getEntities(dim=2) if e not in entities], recursive=True)
+            factory.remove(factory.getEntities(1))
+            factory.remove(factory.getEntities(0))
+
+
+
+
