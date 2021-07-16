@@ -270,6 +270,9 @@ class PackedBed:
             - Filter beads by surface normals
             - Calculate all combinations of normals to copy/translate by
             - Copy+Translate all original beads which are cut
+            - [PROB]: Doesn't handle all edge cases:
+                - Beads sliced by z+ and the extended edge of x or y planes separately (2 separate clean cuts)
+                - fixed by dilation of cut planes, already taken care of by the plane-cut algorithm.
         """
         factory = gmsh.model.occ
 
