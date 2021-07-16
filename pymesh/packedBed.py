@@ -159,7 +159,7 @@ class PackedBed:
             field.setNumber(self.ttag, "DistMin", distmin);
             field.setNumber(self.ttag, "DistMax", distmax);
 
-    def stack_by_cut_planes(self, container):
+    def stack_by_plane_cuts(self, container):
         """
         Periodic packings need to be stacked to make them meshable
         This method does it via cut planes of the column container.

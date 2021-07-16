@@ -11,6 +11,8 @@ from pymesh.packedBed import PackedBed
 from pymesh.container import Container
 from pymesh.column import Column
 
+import sys
+
 import gmsh
 from pathlib import Path
 
@@ -20,6 +22,8 @@ class Model:
 
         self.container_periodicity = config.get('container.periodicity', '')
         self.container_linked      = config.get('container.linked', False)
+        self.stack_method          = config.get('container.stack_method', 'planecut')
+
         self.container_size        = config.get('container.size')
 
         ## To be used with container.size = auto, or container.linked = True
@@ -43,10 +47,13 @@ class Model:
         ##      ALL the container walls, regardless of what the periodicity
         ##      actually is, as long as it's not an empty string.
         if column_periodicity:
-            self.packedBed.stack_by_cut_planes(column_container)
-
-        # if column_periodicity:
-        #     self.packedBed.stack_by_volume_cuts(column_container)
+            if self.stack_method == 'planecut':
+                self.packedBed.stack_by_plane_cuts(column_container)
+            elif self.stack_method == 'volumecut':
+                self.packedBed.stack_by_volume_cuts(column_container)
+            else:
+                print("Config: container.stack_method must be either 'planecut' or 'volumecut'", file=sys.stderr)
+                raise(ValueError)
 
         if self.container_linked :
             inlet_container_config = {
