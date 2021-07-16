@@ -9,7 +9,7 @@ contract:
 
 """
 
-from pymesh.tools import bin_to_arr, grouper, get_surface_normals
+from pymesh.tools import bin_to_arr, grouper, get_surface_normals, get_volume_normals
 from pymesh.bead import Bead
 
 import numpy as np
@@ -206,10 +206,12 @@ class PackedBed:
                 # print(e, " -> ", f)
                 # if e[0] ==3 and len(f) > 1:
 
+                ## TODO: uniquify f before removing. For some reason, in large case, I get too many split parts for a certain bead
                 if len(f) > 1:                                  ## Particles that were split by the plane
                     if e[0] == 3:                               ## Volumes, not surfaces (plane fragments)
                         cut_beads.append(e)                     ## Save original bead to list
                         factory.remove(f, recursive=True)       ## Remove 3D Fragments
+
 
             ## Remove 2D fragments
             for e in fragmented:
@@ -261,3 +263,58 @@ class PackedBed:
 
         # allbeads = self.asDimTags() + copied_beads
         self.entities.extend([tag for _, tag in copied_beads])
+
+    def stack_by_volume_cuts(self, container):
+        """
+        Stack beads by using volume cuts
+            - Cut packing with container
+            - Filter beads by surface normals
+            - Calculate all combinations of normals to copy/translate by
+            - Copy+Translate all original beads which are cut
+        """
+        factory = gmsh.model.occ
+
+        cuts, cmap = factory.cut(self.asDimTags(), container.asDimTags(), removeObject=False, removeTool=False)
+        normalss = get_volume_normals(cuts)
+
+        bead_translationNormals = {}
+
+        for vol,normals in zip(cuts, normalss):
+            # normals.remove([0,0,0])
+            ns = [ n for n in normals if n != [0, 0, 0]]
+            nsc = [ x for i in range(1, len(ns)+1) for x in combinations(ns,i) ]
+            # print( vol, ' -> ', ns)
+            output = []
+            for isc in nsc:
+                combo_normal = [0, 0, 0]
+                for inorm in isc:
+                    combo_normal[0] = combo_normal[0] + inorm[0]
+                    combo_normal[1] = combo_normal[1] + inorm[1]
+                    combo_normal[2] = combo_normal[2] + inorm[2]
+                # print(combo_normal)
+                output.append(combo_normal)
+            index = None
+            for i,e in enumerate(cmap):
+                if vol in e:
+                    index = i
+                    break
+            if index is None:
+                raise(IndexError)
+            bead_translationNormals.setdefault(self.asDimTags()[index], [])
+            bead_translationNormals[self.asDimTags()[index]].extend(output)
+            # print(packedBed.asDimTags()[index], ' -> ', output)
+
+        dx = container.size[3]
+        dy = container.size[4]
+        dz = container.size[5]
+
+        copied_beads = []
+
+        for bead,translationNormals in bead_translationNormals.items():
+            for n in translationNormals:
+                copied_bead = factory.copy([bead])
+                copied_beads.extend(copied_bead)
+                factory.translate(copied_bead, n[0]*dx, n[1]*dy, n[2]*dz)
+
+        self.entities.extend([ x for _,x in copied_beads])
+        factory.remove(cuts, recursive=True)

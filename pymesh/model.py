@@ -30,8 +30,8 @@ class Model:
         self.mesh_size             = config.get('mesh.size', 0.2)
         self.mesh_generate         = config.get('mesh.generate', 3)
 
-        column_container = Container(config)
         self.packedBed = PackedBed(config)
+        column_container = Container(config)
 
         ## NOTE: Column periodicity is taken directly from input. If linked=True, ensure that column is periodic in Z
         ## inlet and outlet periodicity ignores Z, always
@@ -45,6 +45,8 @@ class Model:
         if column_periodicity:
             self.packedBed.stack_by_cut_planes(column_container)
 
+        # if column_periodicity:
+        #     self.packedBed.stack_by_volume_cuts(column_container)
 
         if self.container_linked :
             inlet_container_config = {
@@ -101,3 +103,4 @@ class Model:
         if self.container_linked :
             self.inlet.write(basename + '_inlet' + extension)
             self.outlet.write(basename + '_outlet' + extension)
+
