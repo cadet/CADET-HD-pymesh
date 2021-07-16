@@ -247,6 +247,10 @@ class Column:
         print( len(sLeft), len(sRight) )
 
         if len(sLeft) != len(sRight):
+            remove_all_except([ (2,tag) for tag in sLeft + sRight])
+            testMesh("surfaceMismatch.vtk")
+            print(sLeft)
+            print(sRight)
             raise(AssertionError)
 
         affineTranslation = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
