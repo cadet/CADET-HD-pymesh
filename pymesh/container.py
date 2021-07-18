@@ -44,11 +44,10 @@ class Container:
         else:
             raise(NotImplementedError)
 
-    def asDimTags(self):
+    @property
+    def dimTags(self):
         return [ (3,tag) for tag in self.entities ]
 
-    def asTags(self):
+    @property
+    def tags(self):
         return self.entities
-
-    def asCopyDimTags(self):
-        return gmsh.model.occ.copy([ (3,tag) for tag in self.entities ])

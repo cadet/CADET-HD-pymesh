@@ -66,13 +66,12 @@ class PackedBed:
                 self.beads.append(Bead(x, y, z, r))
 
 
-    def asDimTags(self):
+    @property
+    def dimTags(self):
         return [ (3,tag) for tag in self.entities ]
 
-    def asCopyDimTags(self):
-        return gmsh.model.occ.copy([ (3,tag) for tag in self.entities ])
-
-    def asTags(self):
+    @property
+    def tags(self):
         return self.entities
 
     def updateBounds(self):
@@ -178,7 +177,7 @@ class PackedBed:
         dz = container.size[5]
 
         ## NOTE: Extract ALL container faces, regardless of periodicity directions
-        container_faces = gmsh.model.getBoundary(container.asDimTags(), combined=False, oriented=False)
+        container_faces = gmsh.model.getBoundary(container.dimTags, combined=False, oriented=False)
 
         # Dilate container faces to fully cut through particles
         df = 2          # dilation factor
@@ -195,12 +194,12 @@ class PackedBed:
         for face in container_faces:
 
             ## Fragment the packedBed, do not delete the original object.
-            fragmented, fmap = factory.fragment(self.asDimTags(), [face], removeObject=False, removeTool=True)
+            fragmented, fmap = factory.fragment(self.dimTags, [face], removeObject=False, removeTool=True)
 
             cut_beads =[]
 
             ## For every original (e) and fragmented (f) item:
-            for e,f in zip(self.asDimTags() + [face], fmap):
+            for e,f in zip(self.dimTags + [face], fmap):
                 # print(e, " -> ", f)
                 # if e[0] ==3 and len(f) > 1:
 
@@ -254,7 +253,7 @@ class PackedBed:
                 #     bead.z - combo_normal[2] * dz,
                 #     bead.r))
 
-        # allbeads = self.asDimTags() + copied_beads
+        # allbeads = self.dimTags() + copied_beads
         self.entities.extend([tag for _, tag in copied_beads])
 
     def stack_by_volume_cuts(self, container):
@@ -270,7 +269,7 @@ class PackedBed:
         """
         factory = gmsh.model.occ
 
-        cuts, cmap = factory.cut(self.asDimTags(), container.asDimTags(), removeObject=False, removeTool=False)
+        cuts, cmap = factory.cut(self.dimTags, container.dimTags, removeObject=False, removeTool=False)
         normalss = get_volume_normals(cuts)
 
         bead_translationNormals = {}
@@ -292,9 +291,9 @@ class PackedBed:
                     break
             if index is None:
                 raise(IndexError)
-            bead_translationNormals.setdefault(self.asDimTags()[index], [])
-            bead_translationNormals[self.asDimTags()[index]].extend(output)
-            # print(packedBed.asDimTags()[index], ' -> ', output)
+            bead_translationNormals.setdefault(self.dimTags[index], [])
+            bead_translationNormals[self.dimTags[index]].extend(output)
+            # print(packedBed.dimTags[index], ' -> ', output)
 
         dx = container.size[3]
         dy = container.size[4]
@@ -334,7 +333,7 @@ class PackedBed:
             for yom in y_offset_multiplier:
                 for xom in x_offset_multiplier:
                     if xom == 0 and yom == 0 and zom == 0: continue
-                    dummy = factory.copy(self.asDimTags())
+                    dummy = factory.copy(self.dimTags)
                     # stacked_entities.extend(dummy)
                     self.entities.extend([tag for _,tag in dummy])
                     factory.translate(dummy, xom * dx, yom * dy, zom * dz)

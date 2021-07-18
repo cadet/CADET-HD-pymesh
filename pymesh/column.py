@@ -48,7 +48,7 @@ class Column:
                 'particles': []
         }
 
-        self.fragment(packedBed.asDimTags(), container.asDimTags(), copyObject=copy, removeObject=True, removeTool=True, cleanFragments=True)
+        self.fragment(packedBed.dimTags, container.dimTags, copyObject=copy, removeObject=True, removeTool=True, cleanFragments=True)
 
         self.separate_volumes()
         self.separate_bounding_surfaces()
