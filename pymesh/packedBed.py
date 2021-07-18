@@ -311,3 +311,32 @@ class PackedBed:
 
         self.entities.extend([ x for _,x in copied_beads])
         factory.remove(cuts, recursive=True)
+
+    def stack_all(self, stack_directions:str, dx, dy, dz):
+        """
+        Given entities, stack them in the periodic_directions in combination.
+        With xyz periodicity, it should generate 26 * len(entities) new entities
+
+        It's a highly inefficient way to create periodic meshes, but worked as a first attempt.
+
+        @problem: currently doesn't seem to work. Leaving this here for the future.
+        """
+
+        factory = gmsh.model.occ
+
+        x_offset_multiplier = [-1, 0, 1]  if 'x' in stack_directions else [0]
+        y_offset_multiplier = [-1, 0, 1]  if 'y' in stack_directions else [0]
+        z_offset_multiplier = [-1, 0, 1]  if 'z' in stack_directions else [0]
+
+        # stacked_entities = entities[:]
+        # stacked_entities = []
+
+        for zom in z_offset_multiplier:
+            for yom in y_offset_multiplier:
+                for xom in x_offset_multiplier:
+                    if xom == 0 and yom == 0 and zom == 0: continue
+                    dummy = factory.copy(self.asDimTags())
+                    # stacked_entities.extend(dummy)
+                    self.entities.extend([tag for _,tag in dummy])
+                    factory.translate(dummy, xom * dx, yom * dy, zom * dz)
+
