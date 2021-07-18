@@ -18,13 +18,20 @@ factory = gmsh.model.occ
 class Container:
 
     def __init__(self, config):
+        """
+        Container instantiation
+        """
 
-        self.shape    = config.get('container.shape', 'box')
-        self.size     = config.get('container.size')
+        self.shape    = config.container_shape
+        self.size     = config.container_size
+
         self.entities = []
         self.generate()
 
     def generate(self):
+        """
+        Creates the container geometry
+        """
         if self.shape == 'box':
             if isinstance(self.size, list):
                 self.entities.append(factory.addBox(*self.size))

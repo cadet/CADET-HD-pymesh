@@ -19,23 +19,21 @@ from itertools import combinations
 
 class PackedBed:
 
-    config = {}
-
     def __init__(self, config):
 
-        self.fname                               = config.get('packedbed.packing_file.filename', 'packing.xyzd')
-        self.dataformat                          = config.get('packedbed.packing_file.dataformat', '<d')
-        self.zBot                                = config.get('packedbed.zbot', 0)
-        self.zTop                                = config.get('packedbed.ztop', 0)
-        self.nBeads                              = config.get('packedbed.nbeads', 0)
-        self.scaling_factor                      = config.get('packedbed.scaling_factor', 1)
-        self.particles_scaling_factor            = config.get('packedbed.particles.scaling_factor', 1)
+        self.fname                               = config.packing_file_name
+        self.dataformat                          = config.packing_file_format
+        self.zBot                                = config.packedbed_zbot
+        self.zTop                                = config.packedbed_ztop
+        self.nBeads                              = config.packedbed_nbeads
+        self.scaling_factor                      = config.packedbed_scaling_factor
+        self.particles_scaling_factor            = config.packedbed_particles_scaling_factor
 
-        self.mesh_size                           = config.get('mesh.size', 0.2)
-        self.mesh_size_in                        = config.get('mesh.sizein', self.mesh_size)
-        self.mesh_size_out                       = config.get('mesh.sizeout', self.mesh_size)
-        self.mesh_field_threshold_rad_min_factor = config.get('mesh.field.threshold.rad_min_factor', 1)
-        self.mesh_field_threshold_rad_max_factor = config.get('mesh.field.threshold.rad_max_factor', 1)
+        self.mesh_size                           = config.mesh_size
+        self.mesh_size_in                        = config.mesh_size_in
+        self.mesh_size_out                       = config.mesh_size_out
+        self.mesh_field_threshold_rad_min_factor = config.mesh_field_threshold_rad_min_factor
+        self.mesh_field_threshold_rad_max_factor = config.mesh_field_threshold_rad_max_factor
 
         self.read_packing()
         if config.get('packing.auto_translate'):

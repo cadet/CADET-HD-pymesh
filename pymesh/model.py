@@ -21,19 +21,18 @@ class Model:
 
     def __init__(self, config):
 
-        self.container_periodicity = config.get('container.periodicity', '')
-        self.container_linked      = config.get('container.linked', False)
-        self.stack_method          = config.get('container.stack_method', 'planecut')
+        self.container_periodicity = config.container_periodicity
+        self.container_linked      = config.container_linked
+        self.stack_method          = config.container_stack_method
 
-        self.container_size        = config.get('container.size')
+        self.container_size        = config.container_size
 
-        ## To be used with container.size = auto, or container.linked = True
-        self.inlet_length          = config.get('container.inlet_length', 0)
-        self.outlet_length         = config.get('container.outlet_length', 0)
+        self.inlet_length          = config.container_inlet_length
+        self.outlet_length         = config.container_outlet_length
 
-        self.fname                 = config.get('output.filename', 'output.vtk')
-        self.mesh_size             = config.get('mesh.size', 0.2)
-        self.mesh_generate         = config.get('mesh.generate', 3)
+        self.fname                 = config.output_filename
+        self.mesh_size             = config.mesh_size
+        self.mesh_generate         = config.mesh_generate
 
         self.packedBed = PackedBed(config)
         column_container = Container(config)
