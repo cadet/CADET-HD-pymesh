@@ -27,6 +27,7 @@ def pymesh():
     gmsh.model.add("default")
 
     config.set_gmsh_defaults()
+    config.set_gmsh_options()
 
     defaultModel = Model(config)
     defaultModel.mesh()
