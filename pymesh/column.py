@@ -11,6 +11,7 @@ contract:
 import gmsh
 
 from pymesh.tools import get_surface_normals, testMesh, remove_all_except
+from pymesh.log import Logger
 
 import numpy as np
 import numpy.ma as ma
@@ -18,13 +19,17 @@ from itertools import combinations
 
 class Column:
 
-    def __init__(self, container, packedBed, copy=False, periodicity:str=''):
+    def __init__(self, container, packedBed, copy=False, periodicity:str='', logger=None):
         """
         Create a column object given a container and a packedBed
             - Fragment packedBed and container
             - separate volume and surfaces
             - match periodic surfaces
         """
+
+        self.logger=logger or Logger(level=1)
+        self.logger.out('Initializing column')
+
         self.surfaces = {
                 'inlet' : [],
                 'outlet' : [],
@@ -65,6 +70,7 @@ class Column:
         many volumes it is fragmented into. This is the only thing that matters in our case, hence we remove
         all other volumes to clean up the model.
         """
+        self.logger.out('Fragmenting column')
         factory = gmsh.model.occ
 
         object = factory.copy(object) if copyObject else object
@@ -80,7 +86,6 @@ class Column:
 
 
         if cleanFragments:
-            print("Cleaning Fragments")
             factory.remove([e for e in fragmented if e not in fmap[-1]], recursive=True)
 
         if cleanAll:
@@ -92,6 +97,7 @@ class Column:
         return self.entities
 
     def separate_volumes(self):
+        self.logger.out('Separating volumes')
         self.volumes.update({'interstitial': [ self.entities[-1][1] ]})
         self.volumes.update({'particles': [ tag for _, tag in self.entities[:-1] ]})
 
@@ -100,6 +106,8 @@ class Column:
         """
         Given a fragmented 3D column, extract bounding surfaces and separate them based on their normals in the cardinal directions.
         """
+        self.logger.out('Separating surfaces')
+
         factory = gmsh.model.occ
         factory.synchronize()
 
@@ -151,10 +159,9 @@ class Column:
         """
         Match surfaces on sleft and sright by bounding box. Then setPeriodic().
         """
+        self.logger.out("Matching periodic surfaces in", perDir)
 
-        print("Matching periodic in", perDir)
-        print( len(sLeft), len(sRight) )
-
+        ## If surfaces don't match, show it visually
         if len(sLeft) != len(sRight):
             remove_all_except([ (2,tag) for tag in sLeft + sRight])
             testMesh("surfaceMismatch.vtk")
@@ -164,8 +171,8 @@ class Column:
 
         affineTranslation = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
 
-        for s,t in zip(sLeft, sRight):
-            print(s, ' -> ', t)
+        # for s,t in zip(sLeft, sRight):
+        #     print(s, ' -> ', t)
 
         if perDir == 'x':
             mask = [1, 0, 0 ] * 2
@@ -191,9 +198,9 @@ class Column:
                     gmsh.model.mesh.setPeriodic(2, [sp], [sm], affineTranslation)
 
     def set_physical_groups(self):
-        gmsh.model.removePhysicalGroups()
+        self.logger.out('Setting physical groups')
 
-        print("Setting physical:", self.surfaces.get('inlet'))
+        gmsh.model.removePhysicalGroups()
 
         gmsh.model.addPhysicalGroup(2, self.surfaces.get('inlet'), 1)
         gmsh.model.addPhysicalGroup(2, self.surfaces.get('outlet'), 2)

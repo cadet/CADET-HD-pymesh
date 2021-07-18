@@ -10,7 +10,7 @@ contract:
 from pymesh.packedBed import PackedBed
 from pymesh.container import Container
 from pymesh.column import Column
-from pymesh.configHandler import ConfigHandler
+from pymesh.log import Logger
 
 import sys
 
@@ -19,7 +19,10 @@ from pathlib import Path
 
 class Model:
 
-    def __init__(self, config):
+    def __init__(self, config, logger=None):
+
+        self.logger = logger or Logger(level=0)
+        self.logger.out("Initializing Model")
 
         self.container_periodicity = config.container_periodicity
         self.container_linked      = config.container_linked
@@ -47,6 +50,7 @@ class Model:
         ##      ALL the container walls, regardless of what the periodicity
         ##      actually is, as long as it's not an empty string.
         if column_periodicity:
+            self.logger.out('Stacking packed bed')
             if self.stack_method == 'planecut':
                 self.packedBed.stack_by_plane_cuts(column_container)
             elif self.stack_method == 'volumecut':
@@ -69,6 +73,7 @@ class Model:
                 self.inlet_length
                 ]
 
+            self.logger.out('Creating inlet column section')
             inlet_container = Container('box', inlet_size)
             self.inlet = Column(inlet_container, self.packedBed, copy=True, periodicity=inout_periodicity)
 
@@ -80,24 +85,29 @@ class Model:
                self.container_size[4],
                self.outlet_length
                ]
+            self.logger.out('Creating outlet column section')
             outlet_container = Container('box', outlet_size)
             self.outlet = Column(outlet_container, self.packedBed, copy=True, periodicity=inout_periodicity)
 
+        self.logger.out('Creating central column section')
         self.column = Column(column_container, self.packedBed, copy=False, periodicity=column_periodicity)
 
     def set_mesh_size(self):
+        self.logger.out("Setting mesh size")
         modelEntities = gmsh.model.getEntities()
         gmsh.model.mesh.setSize(modelEntities, self.mesh_size)
 
     def mesh(self):
         gmsh.model.occ.synchronize()
         self.set_mesh_size()
+        self.logger.out("Meshing")
         gmsh.model.mesh.generate()
 
     def write(self):
         basename = Path(self.fname).stem
         extension = Path(self.fname).suffix
 
+        self.logger.out("Writing full mesh")
         gmsh.write(self.fname)
 
         self.column.write(basename + '_column' + extension)
