@@ -19,11 +19,12 @@ from itertools import combinations
 class Column:
 
     def __init__(self, container, packedBed, copy=False, periodicity:str=''):
-        ## 1. Operate (fuse/fragment...)
-        ## 2. Separate Surfaces
-        ## 3. Match Periodic
-        ## 4. Set Physical
-
+        """
+        Create a column object given a container and a packedBed
+            - Fragment packedBed and container
+            - separate volume and surfaces
+            - match periodic surfaces
+        """
         self.surfaces = {
                 'inlet' : [],
                 'outlet' : [],
