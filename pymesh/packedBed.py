@@ -28,6 +28,7 @@ class PackedBed:
         self.nBeads                              = config.packedbed_nbeads
         self.scaling_factor                      = config.packedbed_scaling_factor
         self.particles_scaling_factor            = config.packedbed_particles_scaling_factor
+        self.auto_translate                      = config.packedbed_auto_translate
 
         self.mesh_size                           = config.mesh_size
         self.mesh_size_in                        = config.mesh_size_in
@@ -36,7 +37,7 @@ class PackedBed:
         self.mesh_field_threshold_rad_max_factor = config.mesh_field_threshold_rad_max_factor
 
         self.read_packing()
-        if config.get('packing.auto_translate'):
+        if self.auto_translate:
             self.moveBedtoCenter()
         self.generate()
         ## TODO: Fix mesh_fields for copied/stacked beads for periodic problems
