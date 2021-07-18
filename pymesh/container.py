@@ -17,13 +17,13 @@ factory = gmsh.model.occ
 
 class Container:
 
-    def __init__(self, config):
+    def __init__(self, shape, size):
         """
         Container instantiation
         """
 
-        self.shape    = config.container_shape
-        self.size     = config.container_size
+        self.shape    = shape
+        self.size     = size
 
         self.entities = []
         self.generate()

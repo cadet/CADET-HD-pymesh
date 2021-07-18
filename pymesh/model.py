@@ -35,7 +35,7 @@ class Model:
         self.mesh_generate         = config.mesh_generate
 
         self.packedBed = PackedBed(config)
-        column_container = Container(config)
+        column_container = Container(config.container_shape, config.container_size)
 
         ## NOTE: Column periodicity is taken directly from input. If linked=True, ensure that column is periodic in Z
         ## inlet and outlet periodicity ignores Z, always
@@ -60,37 +60,27 @@ class Model:
                 raise(ValueError)
 
         if self.container_linked :
-            inlet_container_config = ConfigHandler().update({
-                "container": {
-                    "shape": "box",
-                    "size" : [
-                        self.container_size[0],
-                        self.container_size[1],
-                        self.container_size[2] - self.inlet_length,
-                        self.container_size[3],
-                        self.container_size[4],
-                        self.inlet_length
-                        ]
-                    }
-                })
+            inlet_size =  [
+                self.container_size[0],
+                self.container_size[1],
+                self.container_size[2] - self.inlet_length,
+                self.container_size[3],
+                self.container_size[4],
+                self.inlet_length
+                ]
 
-            inlet_container = Container(inlet_container_config)
+            inlet_container = Container('box', inlet_size)
             self.inlet = Column(inlet_container, self.packedBed, copy=True, periodicity=inout_periodicity)
 
-            outlet_container_config = ConfigHandler().update({
-                "container": {
-                    "shape": "box",
-                    "size" : [
-                        self.container_size[0],
-                        self.container_size[1],
-                        self.container_size[2] + self.container_size[5],
-                        self.container_size[3],
-                        self.container_size[4],
-                        self.outlet_length
-                        ],
-                    }
-                })
-            outlet_container = Container(outlet_container_config)
+            outlet_size = [
+               self.container_size[0],
+               self.container_size[1],
+               self.container_size[2] + self.container_size[5],
+               self.container_size[3],
+               self.container_size[4],
+               self.outlet_length
+               ]
+            outlet_container = Container('box', outlet_size)
             self.outlet = Column(outlet_container, self.packedBed, copy=True, periodicity=inout_periodicity)
 
         self.column = Column(column_container, self.packedBed, copy=False, periodicity=column_periodicity)
