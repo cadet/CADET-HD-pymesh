@@ -32,12 +32,6 @@ class ConfigHandler:
             self.config = yaml.load(fp, Loader=yaml.FullLoader)
         self.load()
 
-    def update(self, dic):
-        self.logger.out('Updating config')
-        self.config.update(dic)
-        self.load()
-        return self
-
     def get(self, keys, default=None, vartype=None, choices=[]):
         """
         Simpler syntax to get deep values from a dictionary
