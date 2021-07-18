@@ -111,6 +111,12 @@ class ConfigHandler:
                 gmsh.option.setNumber("Mesh.StlAngularDeflection" , 0.08 )
                 gmsh.option.setNumber("Mesh.StlLinearDeflection"  , 0.0005)
 
+    def set_gmsh_options(self):
+        gmsh_conf = self.get('gmsh', {})
+
+        for option,value in gmsh_conf.items():
+            gmsh.option.setNumber(option, value)
+
 
 class ConfigError(Exception):
     """
