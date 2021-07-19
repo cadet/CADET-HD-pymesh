@@ -68,11 +68,13 @@ class PackedBed:
 
     @property
     def dimTags(self):
-        return [ (3,tag) for tag in self.entities ]
+        # return [ (3,tag) for tag in self.entities ]
+        return [ (3,b.tag) for b in self.beads ]
 
     @property
     def tags(self):
-        return self.entities
+        # return self.entities
+        return [ b.tag for b in self.beads ]
 
     def updateBounds(self):
         """
@@ -129,9 +131,10 @@ class PackedBed:
         Create packed bed entities
         """
         factory = gmsh.model.occ
-        self.entities = []
+        # self.entities = []
         for bead in self.beads:
-            self.entities.append(factory.addSphere(bead.x, bead.y, bead.z, bead.r))
+            # self.entities.append(factory.addSphere(bead.x, bead.y, bead.z, bead.r))
+            bead.tag = factory.addSphere(bead.x, bead.y, bead.z, bead.r)
 
     def set_mesh_fields(self):
         factory = gmsh.model.occ
@@ -164,10 +167,11 @@ class PackedBed:
         2. Fragment serially and find which beads are cut by which faces
         3. Copy and Translate beads based on normal of the cut plane
 
-        [TASK]
         NOTE: This method was used because directly fragmenting objects messes with
         surface normals somehow in gmsh/occt. Ideally, just fragment all at once and
         filter beads by surface normals.
+
+        [TASK]: Cut/Filter/Move after each planecut
         """
         factory = gmsh.model.occ
         factory.synchronize()
@@ -219,24 +223,24 @@ class PackedBed:
 
 
         ## Find all cut beads, uniquely
-        joined_cut_beads = [x  for face in face_cutbeads.keys() for x in face_cutbeads[face]]
-        joined_cut_beads_tags = np.array([x[1] for x in joined_cut_beads])
+        joined_cut_beads_entities = [x  for face in face_cutbeads.keys() for x in face_cutbeads[face]]
+        joined_cut_beads_tags = np.array([x[1] for x in joined_cut_beads_entities])
         joined_cut_beads_tags_unique, joined_cut_beads_counts = np.unique(joined_cut_beads_tags,return_counts=True)
 
-        copied_beads = []
+        joined_cut_beads = [ bead for bead in self.beads if bead.tag in joined_cut_beads_tags_unique ]
 
-        for bead in joined_cut_beads_tags_unique:
+        # for bead_tag in joined_cut_beads_tags_unique:
+        for bead in joined_cut_beads:
             ## Find all planes of cut
             ## Ex: x0, y0
             cut_planes = []
             for face in face_cutbeads.keys():
-                if (3, bead) in face_cutbeads[face]:
+                if (3, bead.tag) in face_cutbeads[face]:
                     cut_planes.append(face)
 
             ## Find all combinations of the cut planes
             ## Ex:[(x0), (y0), (x0,y0)]
             cut_plane_combos = [ x for i in range(1, len(cut_planes)+1) for x in combinations(cut_planes,i) ]
-
 
             ## For every combination of the cut planes,
             ##      - calculate the combined normal,
@@ -244,17 +248,18 @@ class PackedBed:
             for combo in cut_plane_combos:
                 inormals = get_surface_normals(combo)
                 combo_normal = [sum(i) for i in zip(*inormals)]
-                copied_bead = factory.copy([(3,bead)])
-                copied_beads.extend(copied_bead)
-                factory.translate(copied_bead, -combo_normal[0] * dx, -combo_normal[1] *dy, -combo_normal[2] * dz)
+                _, copied_bead_tag = factory.copy([(3,bead.tag)])[0]
+                # copied_beads.extend(copied_bead)
+                factory.translate([(3,copied_bead_tag)], -combo_normal[0] * dx, -combo_normal[1] *dy, -combo_normal[2] * dz)
                 ## TODO: append to self.beads
-                # self.beads.append(Bead(bead.x - combo_normal[0] * dx,
-                #     bead.y - combo_normal[1] * dy,
-                #     bead.z - combo_normal[2] * dz,
-                #     bead.r))
+                self.beads.append(Bead(bead.x - combo_normal[0] * dx,
+                    bead.y - combo_normal[1] * dy,
+                    bead.z - combo_normal[2] * dz,
+                    bead.r, copied_bead_tag))
 
         # allbeads = self.dimTags() + copied_beads
-        self.entities.extend([tag for _, tag in copied_beads])
+        # self.entities.extend([tag for _, tag in copied_beads])
+        # self.entities.extend([tag for _, tag in copied_beads])
 
     def stack_by_volume_cuts(self, container):
         """

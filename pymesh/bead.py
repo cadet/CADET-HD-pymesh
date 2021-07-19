@@ -5,11 +5,12 @@ class Bead:
     Class for individual beads
     """
 
-    def __init__(self, x, y, z, r):
+    def __init__(self, x, y, z, r, tag=0):
         self.x = x
         self.y = y
         self.z = z
         self.r = r
+        self.tag = tag
 
     def pos(self):
         return np.sqrt(self.x**2 + self.y**2)
@@ -19,3 +20,4 @@ class Bead:
 
     def distance(self, other):
         return np.sqrt((self.x-other.x)**2 + (self.y-other.y)**2 + (self.z-other.z)**2)
+
