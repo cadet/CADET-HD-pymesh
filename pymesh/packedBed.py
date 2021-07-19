@@ -44,7 +44,8 @@ class PackedBed:
         if self.auto_translate:
             self.moveBedtoCenter()
         self.generate()
-        ## TODO: Fix mesh_fields for copied/stacked beads for periodic problems
+
+        # print(*[bead for bead in self.beads], sep='\n')
 
     def read_packing(self):
         # dataformat = "<f" ## For old packings with little endian floating point data. Use <d for new ones
@@ -276,22 +277,18 @@ class PackedBed:
 
             ## For every combination of the cut planes,
             ##      - calculate the combined normal,
-            ##      - translate a copy of the bead by -dx*normal_dir.
+            ##      - create (generate) a new bead translated in that direction
             for combo in cut_plane_combos:
                 inormals = get_surface_normals(combo)
                 combo_normal = [sum(i) for i in zip(*inormals)]
-                _, copied_bead_tag = factory.copy([(3,bead.tag)])[0]
-                # copied_beads.extend(copied_bead)
-                factory.translate([(3,copied_bead_tag)], -combo_normal[0] * dx, -combo_normal[1] *dy, -combo_normal[2] * dz)
-                ## TODO: append to self.beads
                 self.beads.append(Bead(bead.x - combo_normal[0] * dx,
                     bead.y - combo_normal[1] * dy,
                     bead.z - combo_normal[2] * dz,
-                    bead.r, copied_bead_tag))
+                    bead.r))
 
-        # allbeads = self.dimTags() + copied_beads
-        # self.entities.extend([tag for _, tag in copied_beads])
-        # self.entities.extend([tag for _, tag in copied_beads])
+        self.generate()
+
+
 
     def stack_by_volume_cuts(self, container):
         """
