@@ -366,8 +366,13 @@ class PackedBed:
                 for xom in x_offset_multiplier:
                     if xom == 0 and yom == 0 and zom == 0: continue
 
+                    ## Going with bead.copy().translate() for no great reason
                     for bead in self.beads:
                         stacked_beads.append(bead.copy().translate(xom*dx, yom*dy, zom*dz))
+
+                    # ## Alternatively append empty beads and then packedBed.generate():
+                    # for bead in self.beads:
+                    #     stacked_beads.append(Bead(bead.x, bead.y, bead.z, bead.r))
 
         self.beads.extend(stacked_beads)
 
