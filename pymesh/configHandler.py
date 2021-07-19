@@ -86,7 +86,7 @@ class ConfigHandler:
         self.container_inlet_length              = self.get('container.inlet_length', 0.0, float)
         self.container_outlet_length             = self.get('container.outlet_length', 0.0, float)
 
-        self.mesh_size_method                    = self.get('mesh.size_method', 'field', str(), ['global', 'field'])
+        self.mesh_size_method                    = self.get('mesh.size_method', 'global', str(), ['global', 'field'])
         self.mesh_size                           = self.get('mesh.size', 0.2, float)
         self.mesh_field_threshold_size_in        = self.get('mesh.field.threshold.size_in', self.mesh_size, float)
         self.mesh_field_threshold_size_out       = self.get('mesh.field.threshold.size_out', self.mesh_size, float)

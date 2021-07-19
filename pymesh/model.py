@@ -99,13 +99,8 @@ class Model:
     def set_mesh_size(self):
         self.logger.out("Setting mesh size")
         if self.mesh_size_method == 'field':
-            ## NOTE: Default
             self.packedBed.set_mesh_fields()
         elif self.mesh_size_method == 'global':
-            ## NOTE: Unnecessary since the global method can be replicated by
-            ## the field method. All the field size variables default to use
-            ## mesh.size when not specifically provided, so it emulates global
-            ## uniform mesh sizing
             modelEntities = gmsh.model.getEntities()
             gmsh.model.mesh.setSize(modelEntities, self.mesh_size)
 
