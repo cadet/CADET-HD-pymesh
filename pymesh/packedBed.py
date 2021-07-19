@@ -209,16 +209,16 @@ class PackedBed:
         surface normals somehow in gmsh/occt. Ideally, just fragment all at once and
         filter beads by surface normals.
 
-        [TASK]: Cut/Filter/Move after each planecut
+        [TASK]: Fragment/Filter/Move after each planecut
         """
         factory = gmsh.model.occ
         factory.synchronize()
 
-        dx = container.size[3]
-        dy = container.size[4]
-        dz = container.size[5]
+        dx = container.dx
+        dy = container.dy
+        dz = container.dz
 
-        ## NOTE: Extract ALL container faces, regardless of periodicity directions
+        ## NOTE: Extracts ALL container faces, regardless of periodicity directions
         container_faces = gmsh.model.getBoundary(container.dimTags, combined=False, oriented=False)
 
         # Dilate container faces to fully cut through particles
