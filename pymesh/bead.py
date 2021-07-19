@@ -18,6 +18,7 @@ class Bead:
     z: float
     r: float
     tag: int = -1
+    ctag: int = -1
 
     def generate(self):
         if self.tag == -1:
@@ -38,7 +39,6 @@ class Bead:
             bead_copy.generate()
         return bead_copy
 
-
     def translate(self, dx, dy, dz):
         object.__setattr__(self, 'x', self.x + dx)
         object.__setattr__(self, 'y', self.y + dy)
@@ -48,3 +48,6 @@ class Bead:
             gmsh.model.occ.translate([(3,self.tag)], dx, dy, dz)
 
         return self
+
+    def set_ctag(self, ictag):
+        object.__setattr__(self, 'ctag', ictag)

@@ -159,14 +159,19 @@ class PackedBed:
             bead_size_ratio = bead.r/self.rref
 
             ctag = factory.addPoint(bead.x, bead.y, bead.z, self.mesh_field_threshold_size_in* bead_size_ratio)
-            self.center_points.append(ctag)
+            # self.center_points.append(ctag)
+            bead.set_ctag(ctag)
 
-            ## NOTE: synch within for loop
-            factory.synchronize()
+        ## NOTE: synch within for loop
+        factory.synchronize()
+
+        for bead in self.beads:
+
+            bead_size_ratio = bead.r/self.rref
 
             dtag = field.add('Distance')
             dtags.append(dtag)
-            field.setNumbers(dtag, 'PointsList', [ctag])
+            field.setNumbers(dtag, 'PointsList', [bead.ctag])
             # field.setNumbers(dtag, 'SurfacesList', [dtag])
 
             distmin = self.mesh_field_threshold_rad_min_factor * bead.r
