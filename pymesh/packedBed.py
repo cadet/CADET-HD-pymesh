@@ -303,9 +303,6 @@ class PackedBed:
         """
         factory = gmsh.model.occ
 
-        self.logger.warn('Stacking by volume-cuts cannot be used for linked periodic columns!')
-        self.logger.warn('Stacking by volume-cuts might not work well with mesh size fields!')
-
         cuts, cmap = factory.cut(self.dimTags, container.dimTags, removeObject=False, removeTool=False)
         normalss = get_volume_normals(cuts)
 
@@ -318,7 +315,7 @@ class PackedBed:
             # print( vol, ' -> ', ns)
             output = []
             for isc in nsc:
-                combo_normal = [sum(i) for i in zip(isc)]
+                combo_normal = [sum(i) for i in zip(*isc)]
                 # print(combo_normal)
                 output.append(combo_normal)
             index = None
@@ -332,19 +329,16 @@ class PackedBed:
             bead_translationNormals[self.dimTags[index]].extend(output)
             # print(packedBed.dimTags[index], ' -> ', output)
 
-        dx = container.size[3]
-        dy = container.size[4]
-        dz = container.size[5]
+        dx = container.dx
+        dy = container.dy
+        dz = container.dz
 
-        copied_beads = []
-
-        for bead,translationNormals in bead_translationNormals.items():
+        for dimTag,translationNormals in bead_translationNormals.items():
+            bead = next(filter(lambda x: x.tag == dimTag[1],  self.beads))
             for n in translationNormals:
-                copied_bead = factory.copy([bead])
-                copied_beads.extend(copied_bead)
-                factory.translate(copied_bead, n[0]*dx, n[1]*dy, n[2]*dz)
+                self.beads.append(Bead(bead.x + n[0]*dx, bead.y + n[1]*dy, bead.z + n[2]*dz, bead.r))
 
-        self.entities.extend([ x for _,x in copied_beads])
+        self.generate()
         factory.remove(cuts, recursive=True)
 
     def stack_all(self, stack_directions:str, dx, dy, dz):
