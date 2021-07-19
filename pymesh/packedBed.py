@@ -133,11 +133,8 @@ class PackedBed:
         """
         Create packed bed entities
         """
-        factory = gmsh.model.occ
-        # self.entities = []
         for bead in self.beads:
-            # self.entities.append(factory.addSphere(bead.x, bead.y, bead.z, bead.r))
-            bead.tag = factory.addSphere(bead.x, bead.y, bead.z, bead.r)
+            bead.generate()
 
     def set_mesh_fields(self):
         factory = gmsh.model.occ

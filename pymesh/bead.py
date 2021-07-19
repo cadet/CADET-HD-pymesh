@@ -1,4 +1,5 @@
 import numpy as np
+import gmsh
 
 class Bead:
     """
@@ -10,9 +11,9 @@ class Bead:
         self.y = y
         self.z = z
         self.r = r
-        self.tag = tag
+        self._tag = tag
 
-    def pos(self):
+    def pos_xy(self):
         return np.sqrt(self.x**2 + self.y**2)
 
     def volume(self):
@@ -21,3 +22,10 @@ class Bead:
     def distance(self, other):
         return np.sqrt((self.x-other.x)**2 + (self.y-other.y)**2 + (self.z-other.z)**2)
 
+    def generate(self):
+        self._tag = gmsh.model.occ.addSphere(self.x, self.y, self.z, self.r)
+        return self._tag
+
+    @property
+    def tag(self):
+        return self._tag
