@@ -11,6 +11,7 @@ contract:
 
 from pymesh.tools import bin_to_arr, grouper, get_surface_normals, get_volume_normals
 from pymesh.bead import Bead
+from pymesh.log import Logger
 
 import numpy as np
 import gmsh
@@ -19,7 +20,9 @@ from itertools import combinations
 
 class PackedBed:
 
-    def __init__(self, config):
+    def __init__(self, config, logger=None):
+
+        self.logger = logger or Logger(level=2)
 
         self.fname                               = config.packing_file_name
         self.dataformat                          = config.packing_file_format
@@ -306,6 +309,9 @@ class PackedBed:
         """
         factory = gmsh.model.occ
 
+        self.logger.warn('Stacking by volume-cuts cannot be used for linked periodic columns!')
+        self.logger.warn('Stacking by volume-cuts might not work well with mesh size fields!')
+
         cuts, cmap = factory.cut(self.dimTags, container.dimTags, removeObject=False, removeTool=False)
         normalss = get_volume_normals(cuts)
 
@@ -356,6 +362,8 @@ class PackedBed:
 
         @problem: currently doesn't seem to work. Leaving this here for the future.
         """
+
+        self.logger.warn('Stacking all beads might not work well with mesh size fields!')
 
         factory = gmsh.model.occ
 
