@@ -2,8 +2,15 @@
 Log class for pymesh
 """
 
-from rich import print as rprint
-from rich.text import Text
+try:
+    from rich import print as rprint
+    from rich.text import Text
+except ImportError:
+    def rprint(obj):
+        print(obj)
+    def Text(*obj, style=None):
+        return "".join(obj)
+
 
 class Logger:
     logout = ""
