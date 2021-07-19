@@ -7,6 +7,7 @@ from pymesh.log import Logger
 import argparse
 import gmsh
 import subprocess
+import os
 
 
 def pymesh():
@@ -16,7 +17,10 @@ def pymesh():
 
     logger = Logger()
 
-    githash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip().decode('utf8')
+    workdir = os.path.dirname(os.path.realpath(__file__))
+    gitdir = os.path.join(workdir, '.git')
+
+    githash = subprocess.check_output(['git', '--work-tree=' + workdir, '--git-dir=' + gitdir,  'rev-parse', '--short', 'HEAD']).strip().decode('utf8')
     logger.note('GMSH API:', gmsh.GMSH_API_VERSION)
     logger.note('pymesh git hash:', githash)
 
