@@ -37,6 +37,7 @@ class Model:
         self.mesh_size             = config.mesh_size
         self.mesh_generate         = config.mesh_generate
 
+
         self.packedBed = PackedBed(config)
         column_container = Container(config.container_shape, config.container_size)
 
@@ -94,8 +95,9 @@ class Model:
 
     def set_mesh_size(self):
         self.logger.out("Setting mesh size")
-        modelEntities = gmsh.model.getEntities()
-        gmsh.model.mesh.setSize(modelEntities, self.mesh_size)
+        # modelEntities = gmsh.model.getEntities()
+        # gmsh.model.mesh.setSize(modelEntities, self.mesh_size)
+        self.packedBed.set_mesh_fields()
 
     def mesh(self):
         gmsh.model.occ.synchronize()

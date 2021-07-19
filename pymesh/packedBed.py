@@ -30,9 +30,10 @@ class PackedBed:
         self.particles_scaling_factor            = config.packedbed_particles_scaling_factor
         self.auto_translate                      = config.packedbed_auto_translate
 
-        self.mesh_size                           = config.mesh_size
+        # self.mesh_size                           = config.mesh_size
         self.mesh_size_in                        = config.mesh_size_in
         self.mesh_size_out                       = config.mesh_size_out
+        self.mesh_ref_radius                     = config.mesh_ref_radius
         self.mesh_field_threshold_rad_min_factor = config.mesh_field_threshold_rad_min_factor
         self.mesh_field_threshold_rad_max_factor = config.mesh_field_threshold_rad_max_factor
 
@@ -41,7 +42,6 @@ class PackedBed:
             self.moveBedtoCenter()
         self.generate()
         ## TODO: Fix mesh_fields for copied/stacked beads for periodic problems
-        self.set_mesh_fields()
 
     def read_packing(self):
         # dataformat = "<f" ## For old packings with little endian floating point data. Use <d for new ones
@@ -140,24 +140,56 @@ class PackedBed:
         factory = gmsh.model.occ
         field = gmsh.model.mesh.field
 
+        self.updateBounds()
+        if self.mesh_ref_radius == 'avg':
+            self.rref = self.ravg
+        elif self.mesh_ref_radius == 'max':
+            self.rref = self.rmax
+        elif self.mesh_ref_radius == 'min':
+            self.rref = self.rmin
+
+        ## Tags of distance and threshold fields
+        dtags = []
+        ttags = []
 
         self.center_points = []
         for bead in self.beads:
-            ctag = factory.addPoint(bead.x, bead.y, bead.z, self.mesh_size_in)
+
+            bead_size_ratio = bead.r/self.rref
+
+            ctag = factory.addPoint(bead.x, bead.y, bead.z, self.mesh_size_in * bead_size_ratio)
             self.center_points.append(ctag)
 
-            self.dtag = field.add('Distance')
-            field.setNumbers(self.dtag, 'PointsList', [self.dtag])
+            ## NOTE: synch within for loop
+            factory.synchronize()
+
+            dtag = field.add('Distance')
+            dtags.append(dtag)
+            field.setNumbers(dtag, 'PointsList', [ctag])
+            # field.setNumbers(dtag, 'SurfacesList', [dtag])
 
             distmin = self.mesh_field_threshold_rad_min_factor * bead.r
             distmax = self.mesh_field_threshold_rad_max_factor * bead.r
 
-            self.ttag = field.add('Threshold')
-            field.setNumber(self.ttag, "InField", self.dtag);
-            field.setNumber(self.ttag, "SizeMin", self.mesh_size_in);
-            field.setNumber(self.ttag, "SizeMax", self.mesh_size_out);
-            field.setNumber(self.ttag, "DistMin", distmin);
-            field.setNumber(self.ttag, "DistMax", distmax);
+            ttag = field.add('Threshold')
+            ttags.append(ttag)
+            field.setNumber(ttag, "InField", dtag);
+            field.setNumber(ttag, "SizeMin", self.mesh_size_in * bead_size_ratio);
+            field.setNumber(ttag, "SizeMax", self.mesh_size_out);
+            field.setNumber(ttag, "DistMin", distmin);
+            field.setNumber(ttag, "DistMax", distmax);
+
+        ## Set background field
+        backgroundField = 'Min' if self.mesh_size_in <= self.mesh_size_out else 'Max'
+        bftag = field.add(backgroundField);
+        field.setNumbers(bftag, "FieldsList", ttags);
+        field.setAsBackgroundMesh(bftag);
+
+        gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
+        gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
+        gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
+
+        factory.synchronize()
 
     def stack_by_plane_cuts(self, container):
         """

@@ -89,6 +89,7 @@ class ConfigHandler:
         self.mesh_size                           = self.get('mesh.size', 0.2, float)
         self.mesh_size_in                        = self.get('mesh.sizein', self.mesh_size, float)
         self.mesh_size_out                       = self.get('mesh.sizeout', self.mesh_size, float)
+        self.mesh_ref_radius                     = self.get('mesh.ref_radius', 'avg', str(), ['avg', 'max', 'min'])
         self.mesh_field_threshold_rad_min_factor = self.get('mesh.field.threshold.rad_min_factor', 1.0, float)
         self.mesh_field_threshold_rad_max_factor = self.get('mesh.field.threshold.rad_max_factor', 1.0, float)
         self.mesh_generate                       = self.get('mesh.generate', 3, int, [0,1,2,3])
