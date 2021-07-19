@@ -32,3 +32,19 @@ class Bead:
     def distance(self, other):
         return np.sqrt((self.x-other.x)**2 + (self.y-other.y)**2 + (self.z-other.z)**2)
 
+    def copy(self):
+        bead_copy = Bead(self.x, self.y, self.z, self.r)
+        if self.tag != -1:
+            bead_copy.generate()
+        return bead_copy
+
+
+    def translate(self, dx, dy, dz):
+        object.__setattr__(self, 'x', self.x + dx)
+        object.__setattr__(self, 'y', self.y + dy)
+        object.__setattr__(self, 'z', self.z + dz)
+
+        if self.tag != -1:
+            gmsh.model.occ.translate([(3,self.tag)], dx, dy, dz)
+
+        return self
