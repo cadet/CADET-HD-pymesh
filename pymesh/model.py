@@ -55,6 +55,8 @@ class Model:
             self.logger.out('Stacking packed bed')
             if self.stack_method == 'planecut':
                 self.packedBed.stack_by_plane_cuts(column_container)
+            elif self.stack_method == 'all':
+                self.packedBed.stack_all(column_periodicity, column_container.dx, column_container.dy, column_container.dz)
             elif self.stack_method == 'volumecut':
                 if self.container_linked:
                     print("ConfigError: container.stack_method = volumecut cannot be used with container.linked = True")

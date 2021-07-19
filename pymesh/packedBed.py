@@ -351,7 +351,7 @@ class PackedBed:
         @problem: currently doesn't seem to work. Leaving this here for the future.
         """
 
-        self.logger.warn('Stacking all beads might not work well with mesh size fields!')
+        self.logger.warn('PackedBed.stack_all:', 'This method is untested and undeveloped. Use planecut instead.')
 
         factory = gmsh.model.occ
 
@@ -359,15 +359,16 @@ class PackedBed:
         y_offset_multiplier = [-1, 0, 1]  if 'y' in stack_directions else [0]
         z_offset_multiplier = [-1, 0, 1]  if 'z' in stack_directions else [0]
 
-        # stacked_entities = entities[:]
-        # stacked_entities = []
+        stacked_beads = []
 
         for zom in z_offset_multiplier:
             for yom in y_offset_multiplier:
                 for xom in x_offset_multiplier:
                     if xom == 0 and yom == 0 and zom == 0: continue
-                    dummy = factory.copy(self.dimTags)
-                    # stacked_entities.extend(dummy)
-                    self.entities.extend([tag for _,tag in dummy])
-                    factory.translate(dummy, xom * dx, yom * dy, zom * dz)
+
+                    for bead in self.beads:
+                        stacked_beads.append(bead.copy().translate(xom*dx, yom*dy, zom*dz))
+
+        self.beads.extend(stacked_beads)
+
 

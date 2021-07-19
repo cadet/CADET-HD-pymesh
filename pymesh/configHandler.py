@@ -82,7 +82,7 @@ class ConfigHandler:
         self.container_size                      = self.get('container.size', vartype=list)
         self.container_periodicity               = self.get('container.periodicity', '', str(), periodicity_choices)
         self.container_linked                    = self.get('container.linked', False, bool)
-        self.container_stack_method              = self.get('container.stack_method', 'planecut', str(), ['planecut', 'volumecut'])
+        self.container_stack_method              = self.get('container.stack_method', 'planecut', str(), ['planecut', 'volumecut', 'all'])
         self.container_inlet_length              = self.get('container.inlet_length', 0.0, float)
         self.container_outlet_length             = self.get('container.outlet_length', 0.0, float)
 
