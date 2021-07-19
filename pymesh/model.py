@@ -111,7 +111,7 @@ class Model:
         gmsh.model.occ.synchronize()
         self.set_mesh_size()
         self.logger.out("Meshing")
-        gmsh.model.mesh.generate()
+        gmsh.model.mesh.generate(self.mesh_generate)
 
     def write(self):
         basename = Path(self.fname).stem
