@@ -230,7 +230,7 @@ class PackedBed:
 
         ## Find which faces cut which beads
         ##      Done in series because no way currently to say which face cut which bead otherwise
-        ##      (Tried filtering beads by cut surfaces, but that seems to be buggy)
+        ##      (Tried filtering beads by cut surfaces, but that seems to be buggy with fragmenting)
         ## Store in dict as {faceDimTag : [cut_beads_dimtags]}
         for face in container_faces:
 
@@ -313,24 +313,36 @@ class PackedBed:
         bead_translationNormals = {}
 
         for vol,normals in zip(cuts, normalss):
-            # normals.remove([0,0,0])
-            ns = [ n for n in normals if n != [0, 0, 0]]
-            nsc = [ x for i in range(1, len(ns)+1) for x in combinations(ns,i) ]
-            # print( vol, ' -> ', ns)
-            output = []
-            for isc in nsc:
-                combo_normal = [sum(i) for i in zip(*isc)]
-                # print(combo_normal)
-                output.append(combo_normal)
-            index = None
-            for i,e in enumerate(cmap):
-                if vol in e:
-                    index = i
-                    break
-            if index is None:
-                raise(IndexError)
+
+            ## Find flat wall normals for given volumes
+            wall_normals = [ n for n in normals if n != [0, 0, 0]]
+
+            ## Find ALL non-zero lengthed combinations for the flat_normals
+            ## Eg. with flat_normals = [ x, y ] ,
+            ##          flat_normals_combos = [ x, y, xy ]
+            wall_normals_combos = [ x for i in range(1, len(wall_normals)+1) for x in combinations(wall_normals,i) ]
+
+            ## Add up individual normals of the wall_normals_combos
+            ## Eg: element xy = [[1, 0, 0] , [0, 1, 0]] -> [1,1,0]
+            ## Assemble them into translation_normals (sum all normals in the unrolled tuple)
+            translation_normals = map(lambda combo: [sum(i) for i in zip(*combo)], wall_normals_combos)
+
+            ## Find the original bead entities corresponding to the cut beads
+            ## Store the mapping in the bead_translationNormals dictionary
+            ##### ---------------------------
+            ##### index = None
+            ##### for i,e in enumerate(cmap):
+            #####     if vol in e:
+            #####         index = i
+            #####         break
+            ##### if index is None:
+            #####     raise(IndexError)
+            ##### ---------------------------
+            index = cmap.index(list( filter(lambda e: vol in e, cmap))[0])
+
+            ## Set default to empty list, so that extending is possible
             bead_translationNormals.setdefault(self.dimTags[index], [])
-            bead_translationNormals[self.dimTags[index]].extend(output)
+            bead_translationNormals[self.dimTags[index]].extend(translation_normals)
             # print(packedBed.dimTags[index], ' -> ', output)
 
         dx = container.dx
