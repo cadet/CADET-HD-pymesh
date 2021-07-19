@@ -237,26 +237,19 @@ class PackedBed:
             ## Fragment the packedBed, do not delete the original object.
             fragmented, fmap = factory.fragment(self.dimTags, [face], removeObject=False, removeTool=True)
 
-            cut_beads =[]
+            ## Find beads that are split by the face
+            split_beads = filter(lambda f: len(f)>1 and f[0][0]==3, fmap)
 
-            ## For every original (e) and fragmented (f) item:
-            for e,f in zip(self.dimTags + [face], fmap):
-                # print(e, " -> ", f)
-                # if e[0] ==3 and len(f) > 1:
+            ## Find the original beads that would be split
+            split_beads_orig = list(map(lambda x: self.dimTags[fmap.index(x)], split_beads))
 
-                ## TODO: uniquify f before removing. For some reason, in large case, I get too many split parts for a certain bead
-                if len(f) > 1:                                  ## Particles that were split by the plane
-                    if e[0] == 3:                               ## Volumes, not surfaces (plane fragments)
-                        cut_beads.append(e)                     ## Save original bead to list
-                        factory.remove(f, recursive=True)       ## Remove 3D Fragments
+            ## Remove the new split beads
+            map(lambda f: factory.remove(f, recursive=True), split_beads)
 
+            ## Remove face fragments
+            map(lambda f: factory.remove(f, recursive=True), filter(lambda x: e[0]==2, fragmented))
 
-            ## Remove 2D fragments
-            for e in fragmented:
-                if e[0] == 2:
-                    factory.remove([e], recursive=True)
-
-            face_cutbeads.update({face : cut_beads})
+            face_cutbeads.update({face : split_beads_orig})
 
 
         ## Find all cut beads, uniquely
