@@ -121,6 +121,9 @@ class PackedBed:
             bead.generate()
 
     def set_mesh_fields(self):
+        """
+        Set mesh Distance and Threshold fields for every bead
+        """
         factory = gmsh.model.occ
         field = gmsh.model.mesh.field
 
@@ -136,6 +139,7 @@ class PackedBed:
         dtags = []
         ttags = []
 
+        ## Create points as an anchor for the distance fields
         for bead in self.beads:
 
             bead_size_ratio = bead.r/self.rref
@@ -143,7 +147,6 @@ class PackedBed:
             ctag = factory.addPoint(bead.x, bead.y, bead.z, self.mesh_field_threshold_size_in* bead_size_ratio)
             bead.set_ctag(ctag)
 
-        ## NOTE: synch within for loop
         factory.synchronize()
 
         for bead in self.beads:
