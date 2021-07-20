@@ -28,6 +28,7 @@ class Model:
         self.container_linked      = config.container_linked
         self.stack_method          = config.container_stack_method
 
+        self.container_shape       = config.container_shape
         self.container_size        = config.container_size
 
         self.inlet_length          = config.container_inlet_length
@@ -40,7 +41,11 @@ class Model:
 
 
         self.packedBed = PackedBed(config)
-        column_container = Container(config.container_shape, config.container_size)
+
+        if not config.container_shape:
+            return
+
+        column_container = Container(self.container_shape, self.container_size)
 
         ## NOTE: Column periodicity is taken directly from input. If linked=True, ensure that column is periodic in Z
         ## inlet and outlet periodicity ignores Z, always
@@ -116,6 +121,9 @@ class Model:
 
         self.logger.out("Writing full mesh")
         gmsh.write(self.fname)
+
+        if not self.container_shape:
+            return
 
         self.column.write(basename + '_column' + extension)
 

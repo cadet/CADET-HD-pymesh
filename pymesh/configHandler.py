@@ -44,7 +44,7 @@ class ConfigHandler:
 
         if value == None:
             if default != None:
-                self.logger.warn(keys, 'not specified! Defaulting to', str(default))
+                self.logger.warn(keys, 'not specified! Defaulting to', str(default) or 'None (empty string)')
                 value = default
 
         if vartype:
@@ -78,8 +78,8 @@ class ConfigHandler:
         self.packedbed_particles_scaling_factor  = self.get('packedbed.particles.scaling_factor', 1.0, float)
         self.packedbed_auto_translate            = self.get('packedbed.auto_translate', False, bool)
 
-        self.container_shape                     = self.get('container.shape', 'box', vartype=str(), choices = ['box'])
-        self.container_size                      = self.get('container.size', vartype=list)
+        self.container_shape                     = self.get('container.shape', '', vartype=str(), choices = ['box', ''])
+        self.container_size                      = self.get('container.size', [], vartype=list)
         self.container_periodicity               = self.get('container.periodicity', '', str(), periodicity_choices)
         self.container_linked                    = self.get('container.linked', False, bool)
         self.container_stack_method              = self.get('container.stack_method', 'planecut', str(), ['planecut', 'volumecut', 'all'])
