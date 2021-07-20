@@ -114,20 +114,23 @@ class PackedBed:
         self.zmax = max(zpr)
         self.zmin = min(zmr)
 
+        self.bound_zbot = min(z)
+        self.bound_ztop = max(z)
+
         self.R = max((self.xmax-self.xmin)/2, (self.ymax-self.ymin)/2) ## Similar to Genmesh
         self.h = self.zmax - self.zmin
         self.CylinderVolume = np.pi * self.R**2 * self.h
 
     def moveBedtoCenter(self):
         """
-        Translate bed center to origin of coordinate system.
+        Translate bed bottom center to origin of coordinate system.
         """
         self.updateBounds()
         offsetx = -(self.xmax + self.xmin)/2
         offsety = -(self.ymax + self.ymin)/2
+        offsetz = -(self.bound_zbot)
         for bead in self.beads:
-            bead.x = bead.x + offsetx
-            bead.y = bead.y + offsety
+            bead.translate(offsetx, offsety, offsetz)
         self.updateBounds()
 
     def generate(self):
