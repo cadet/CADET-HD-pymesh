@@ -56,3 +56,10 @@ class Bead:
     def dimTag(self):
         return (3,self.tag)
 
+    @property
+    def leftCardinalBounds(self):
+        return self.x-self.r, self.y-self.r, self.z-self.r
+
+    @property
+    def rightCardinalBounds(self):
+        return self.x+self.r, self.y+self.r, self.z+self.r

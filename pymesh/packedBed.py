@@ -85,37 +85,17 @@ class PackedBed:
         Calculate bounding points for the packed bed.
         """
 
-        xpr = []
-        xmr = []
-        ypr = []
-        ymr = []
-        zpr = []
-        zmr = []
-        z = []
+        self.bound_zbot = min( bead.z for bead in self.beads )
 
-        for bead in self.beads:
-            xpr.append(bead.x + bead.r)
-            xmr.append(bead.x - bead.r)
-            ypr.append(bead.y + bead.r)
-            ymr.append(bead.y - bead.r)
-            zpr.append(bead.z + bead.r)
-            zmr.append(bead.z - bead.r)
-            z.append(bead.z)
+        leftCardinalBounds = [bead.leftCardinalBounds for bead in self.beads]
+        rightCardinalBounds = [bead.rightCardinalBounds for bead in self.beads]
+        self.xmin, self.ymin, self.zmin = [min(c) for c in zip(*leftCardinalBounds)]
+        self.xmax, self.ymax, self.zmax = [max(c) for c in zip(*rightCardinalBounds)]
 
         radList = [ bead.r for bead in self.beads ]
         self.rmax = max(radList)
         self.rmin = min(radList)
-        self.ravg = sum(radList)/len(radList)
-
-        self.xmax = max(xpr)
-        self.ymax = max(ypr)
-        self.ymin = min(ymr)
-        self.xmin = min(xmr)
-        self.zmax = max(zpr)
-        self.zmin = min(zmr)
-
-        self.bound_zbot = min(z)
-        self.bound_ztop = max(z)
+        self.ravg = sum(radList)/len(self.beads)
 
         self.R = max((self.xmax-self.xmin)/2, (self.ymax-self.ymin)/2) ## Similar to Genmesh
         self.h = self.zmax - self.zmin
