@@ -251,28 +251,25 @@ class PackedBed:
 
             face_cutbeads.update({face : split_beads_orig})
 
-
         ## Find all cut beads, uniquely
         joined_cut_beads_entities = [x  for face in face_cutbeads.keys() for x in face_cutbeads[face]]
         joined_cut_beads_tags = np.array([x[1] for x in joined_cut_beads_entities])
-        joined_cut_beads_tags_unique, joined_cut_beads_counts = np.unique(joined_cut_beads_tags,return_counts=True)
+        joined_cut_beads_tags_unique = np.unique(joined_cut_beads_tags)
+        joined_cut_beads = ( bead for bead in self.beads if bead.tag in joined_cut_beads_tags_unique )
 
-        joined_cut_beads = [ bead for bead in self.beads if bead.tag in joined_cut_beads_tags_unique ]
-
-        # for bead_tag in joined_cut_beads_tags_unique:
+        ## For every bead that is cut
         for bead in joined_cut_beads:
             ## Find all planes of cut
             ## Ex: x0, y0
-            cut_planes = []
-            for face in face_cutbeads.keys():
-                if (3, bead.tag) in face_cutbeads[face]:
-                    cut_planes.append(face)
+            cut_planes = [ face for face,facecutbeads in face_cutbeads.items() if bead.dimTag in facecutbeads ]
+            # cut_planes = list(filter(lambda face: (3,bead.tag) in face_cutbeads[face], face_cutbeads.keys()))
 
             ## Find all combinations of the cut planes
             ## Ex:[(x0), (y0), (x0,y0)]
-            cut_plane_combos = [ x for i in range(1, len(cut_planes)+1) for x in combinations(cut_planes,i) ]
+            cut_plane_combos = ( x for i in range(1, len(cut_planes)+1) for x in combinations(cut_planes,i) )
 
             ## For every combination of the cut planes,
+            ##      - get surface normals for the constituent wall faces
             ##      - calculate the combined normal,
             ##      - create (generate) a new bead translated in that direction
             for combo in cut_plane_combos:
@@ -283,6 +280,7 @@ class PackedBed:
                     bead.z - combo_normal[2] * dz,
                     bead.r))
 
+        ## Generate the packed bed, i.e., the bead geometries
         self.generate()
 
 

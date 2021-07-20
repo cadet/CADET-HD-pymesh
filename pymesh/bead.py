@@ -51,3 +51,8 @@ class Bead:
 
     def set_ctag(self, ictag):
         object.__setattr__(self, 'ctag', ictag)
+
+    @property
+    def dimTag(self):
+        return (3,self.tag)
+
