@@ -19,6 +19,13 @@ class Logger:
     def __init__(self, level=0):
         self.level = level
 
+    def print(self, *message):
+        """
+        Default print (without Text wrapper) to be able to print dicts and other stuff
+        """
+        Logger.logout = "".join([Logger.logout, str(*message), '\n'])
+        rprint(*message)
+
     def out(self, *message, style=None):
         """
         Write to stdout

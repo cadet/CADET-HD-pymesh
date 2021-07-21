@@ -30,6 +30,7 @@ class ConfigHandler:
         self.logger.out('Reading config file')
         with open(fname, 'r') as fp:
             self.config = yaml.load(fp, Loader=yaml.FullLoader)
+        self.logger.print(self.config)
         self.load()
 
     def get(self, keys, default=None, vartype=None, choices=[]):
