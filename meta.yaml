@@ -1,0 +1,40 @@
+### INCOMPLETE/UNTESTED meta.yaml template for conda-build.
+
+{% set name = "pymesh" %}
+{% set version = "0.1.0" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  # git_url: https://jugit.fz-juelich.de/IBG-1/ModSim/Chroma-HD/pymesh
+  path: .
+
+build:
+  number: 0
+  skip: true  # [py<37]
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+requirements:
+  build:
+  host:
+    - python
+    - pip
+  run:
+    - python
+    - numpy
+    - pyyaml
+    - rich
+
+# test:
+#   imports:
+#     - pymesh
+
+about:
+  home: https://jugit.fz-juelich.de/IBG-1/ModSim/Chroma-HD/pymesh
+  summary: 'A mesher for 3D chromatography columns.'
+
+extra:
+  recipe-maintainers:
+    - jayghoshter
