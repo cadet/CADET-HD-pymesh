@@ -19,7 +19,7 @@ factory = gmsh.model.occ
 
 class Container:
 
-    def __init__(self, shape, size, logger=Logger()):
+    def __init__(self, shape, size, logger=Logger(level=2)):
         """
         Container instantiation
         """

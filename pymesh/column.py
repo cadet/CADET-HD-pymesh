@@ -19,7 +19,7 @@ from itertools import combinations
 
 class Column:
 
-    def __init__(self, container, packedBed, copy=False, periodicity:str='', logger=None):
+    def __init__(self, container, packedBed, copy=False, periodicity:str='', logger=Logger(level=1)):
         """
         Create a column object given a container and a packedBed
             - Fragment packedBed and container
@@ -27,7 +27,7 @@ class Column:
             - match periodic surfaces
         """
 
-        self.logger=logger or Logger(level=1)
+        self.logger=logger
         self.logger.out('Initializing column')
 
         self.surfaces = {

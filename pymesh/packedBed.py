@@ -20,9 +20,9 @@ from itertools import combinations
 
 class PackedBed:
 
-    def __init__(self, config, logger=None):
+    def __init__(self, config, logger=Logger(level=2)):
 
-        self.logger = logger or Logger(level=2)
+        self.logger = logger
 
         self.fname                               = config.packing_file_name
         self.dataformat                          = config.packing_file_format

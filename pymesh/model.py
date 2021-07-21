@@ -19,9 +19,9 @@ from pathlib import Path
 
 class Model:
 
-    def __init__(self, config, logger=None):
+    def __init__(self, config, logger=Logger(level=0)):
 
-        self.logger = logger or Logger(level=0)
+        self.logger = logger
         self.logger.out("Initializing Model")
 
         self.container_periodicity = config.container_periodicity
