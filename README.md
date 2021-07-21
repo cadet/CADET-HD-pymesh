@@ -6,6 +6,18 @@ A rewrite of genmesh because python is a bit more flexible and concise for what 
 
 Plus a rewrite helps me reorganize the software at an architectural level. 
 
+# Install
+The best idea is to just use conda, create your environment, install necessary dependencies, install pip in conda, and then do `pip install .`
+
+
+If gmsh is built from source, ensure that 
+    - PYTHONPATH points to $GMSH_ROOT/lib (or wherever the gmsh.py file is)
+    - LD_LIBRARY_PATH points to $GMSH_ROOT/lib (or wherever the gmsh{.so,.a} files are)
+
+# Usage
+
+The script in `bin/` should be available in `$PATH` after the install. It is currently called `mesh`. Given the appropriate input file in yaml format, run: `mesh input.yaml`
+
 # Features roadmap
 - [TASK] cylinder container shape
 - [TASK] porosity manipulation by bead addition/deletion
