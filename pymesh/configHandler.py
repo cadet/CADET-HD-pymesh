@@ -49,7 +49,7 @@ class ConfigHandler:
 
         if vartype:
             if not isinstance(value, vartype):
-                self.logger.die(keys, 'has invalid type!')
+                self.logger.die(keys, 'has invalid type!', str(type(value)), 'instead of', str(vartype))
 
         if choices:
             if value not in choices:
