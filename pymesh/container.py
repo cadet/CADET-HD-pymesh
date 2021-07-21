@@ -13,17 +13,20 @@ Container class.
 import gmsh
 import sys
 
+from pymesh.log import Logger
+
 factory = gmsh.model.occ
 
 class Container:
 
-    def __init__(self, shape, size):
+    def __init__(self, shape, size, logger=Logger()):
         """
         Container instantiation
         """
 
         self.shape    = shape
         self.size     = size
+        self.logger   = logger
 
         self.entities = []
         self.generate()
@@ -41,6 +44,12 @@ class Container:
             else:
                 print("ERROR: container.size must be a list", file=sys.stderr)
                 raise(NotImplementedError)
+        elif self.shape == 'cylinder':
+            self.logger.warn("Support for cylindrical containers is minimal!")
+            if isinstance(self.size, list):
+                self.entities.append(factory.addCylinder(*self.size))
+                self.dr = self.size[6]
+                self.dz = self.size[5]
         else:
             raise(NotImplementedError)
 

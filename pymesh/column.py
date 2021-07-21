@@ -106,6 +106,9 @@ class Column:
         """
         Given a fragmented 3D column, extract bounding surfaces and separate them based on their normals in the cardinal directions.
         """
+
+        ## TODO: for cylinders
+
         self.logger.out('Separating surfaces')
 
         factory = gmsh.model.occ
