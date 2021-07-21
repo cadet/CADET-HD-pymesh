@@ -11,14 +11,33 @@ from shutil import rmtree
 
 from setuptools import find_packages, setup, Command
 
+def git_version():
+    """ Return version with local version identifier. """
+    import git
+    repo = git.Repo('.git')
+    repo.git.status()
+    print(repo)
+    sha = repo.head.commit.hexsha
+    sha = repo.git.rev_parse(sha, short=6)
+    print(sha)
+    if repo.is_dirty():
+        return '{sha}.dirty'.format(sha=sha)
+    else:
+        return sha
+
+
 # Package meta-data.
 NAME = 'pymesh'
 DESCRIPTION = 'Mesher for 3D chromatography columns.'
 URL = 'https://jugit.fz-juelich.de/IBG-1/ModSim/Chroma-HD/pymesh'
 EMAIL = 'j.rao@fz-juelich.de'
 AUTHOR = 'Jayghosh Rao'
-REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '0.1.0'
+REQUIRES_PYTHON = '>=3.7.0'
+VERSION = git_version()
+
+# print(git_version())
+# print(VERSION)
+# import sys; sys.exit()
 
 # What packages are required for this module to be executed?
 REQUIRED = [
