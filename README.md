@@ -19,7 +19,7 @@ If gmsh is built from source, ensure that
 The script in `bin/` should be available in `$PATH` after the install. It is currently called `mesh`. Given the appropriate input file in yaml format, run: `mesh input.yaml`
 
 # Features roadmap
-- [TASK] cylinder container shape
+- [PART] cylinder container shape
 - [TASK] porosity manipulation by bead addition/deletion
 - [TASK] bridges, cuts
 - [TASK] Move to numpy arrays
@@ -30,3 +30,5 @@ The script in `bin/` should be available in `$PATH` after the install. It is cur
 - [CRIT] setting gmsh.General.NumThreads generates degenerate element surfaces. It's a gmsh issue.
     - observed when used with periodicity and linked mesh
     - In paraview, extract surfaces and then clip to see the degenerate surfaces
+- OpenCASCADE fragment operation doesn't preserve surface normals of cut objects. But intersecting before fragmenting does.
+- stack_all() fails (possibly memory issues?) for large packings.
