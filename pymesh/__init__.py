@@ -4,7 +4,9 @@ pymesh
 A mesher for 3D chromatography columns.
 """
 
-__version__ = "0.1.0"
+import pkg_resources
+
+__version__ = pkg_resources.get_distribution("pymesh").version
 __author__ = 'Jayghosh Rao'
 __credits__ = 'FZJ/IBG-1/ModSim'
 
