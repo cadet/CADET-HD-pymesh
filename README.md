@@ -13,3 +13,8 @@ Plus a rewrite helps me reorganize the software at an architectural level.
 - [TASK] Move to numpy arrays
 - [TASK] check out numba njit
 - [TASK] Parallelize
+
+# Known issues:
+- [CRIT] setting gmsh.General.NumThreads generates degenerate element surfaces. It's a gmsh issue.
+    - observed when used with periodicity and linked mesh
+    - In paraview, extract surfaces and then clip to see the degenerate surfaces
