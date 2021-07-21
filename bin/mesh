@@ -15,12 +15,15 @@ def pymesh():
 
     logger = Logger()
 
-    workdir = os.path.dirname(os.path.realpath(__file__))
-    gitdir = os.path.join(workdir, '.git')
-
-    githash = subprocess.check_output(['git', '--work-tree=' + workdir, '--git-dir=' + gitdir,  'rev-parse', '--short', 'HEAD']).strip().decode('utf8')
     logger.note('GMSH API:', gmsh.GMSH_API_VERSION)
-    logger.note('pymesh git hash:', githash)
+
+    try:
+        workdir = os.path.dirname(os.path.realpath(__file__))
+        gitdir = os.path.join(workdir, '.git')
+        githash = subprocess.check_output(['git', '--work-tree=' + workdir, '--git-dir=' + gitdir,  'rev-parse', '--short', 'HEAD']).strip().decode('utf8')
+        logger.note('pymesh git hash:', githash)
+    except subprocess.CalledProcessError:
+        logger.note('pymesh git hash:', 'unknown')
 
     config = ConfigHandler(logger)
     config.read(args['file'])
