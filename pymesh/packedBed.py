@@ -224,16 +224,15 @@ class PackedBed:
             fragmented, fmap = factory.fragment(self.dimTags, [face], removeObject=False, removeTool=True)
 
             ## Find beads that are split by the face
-            split_beads = filter(lambda f: len(f)>1 and f[0][0]==3, fmap)
+            split_beads = list(filter(lambda f: len(f)>1 and f[0][0]==3, fmap))
+            split_faces = list(filter(lambda f: f[0]==2, fragmented))
 
             ## Find the original beads that would be split
             split_beads_orig = list(map(lambda x: self.dimTags[fmap.index(x)], split_beads))
 
-            ## Remove the new split beads
-            map(lambda f: factory.remove(f, recursive=True), split_beads)
-
-            ## Remove face fragments
-            map(lambda f: factory.remove(f, recursive=True), filter(lambda e: e[0]==2, fragmented))
+            ## Remove the new split beads and faces
+            factory.remove([y for x in split_beads for y in x], recursive=True)
+            factory.remove(split_faces, recursive=True)
 
             face_cutbeads.update({face : split_beads_orig})
 
