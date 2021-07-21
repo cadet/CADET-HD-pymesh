@@ -233,7 +233,7 @@ class PackedBed:
             map(lambda f: factory.remove(f, recursive=True), split_beads)
 
             ## Remove face fragments
-            map(lambda f: factory.remove(f, recursive=True), filter(lambda x: e[0]==2, fragmented))
+            map(lambda f: factory.remove(f, recursive=True), filter(lambda e: e[0]==2, fragmented))
 
             face_cutbeads.update({face : split_beads_orig})
 
