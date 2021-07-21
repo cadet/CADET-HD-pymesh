@@ -351,21 +351,23 @@ class PackedBed:
         y_offset_multiplier = [-1, 0, 1]  if 'y' in stack_directions else [0]
         z_offset_multiplier = [-1, 0, 1]  if 'z' in stack_directions else [0]
 
-        stacked_beads = []
+        # stacked_beads = []
 
         for zom in z_offset_multiplier:
             for yom in y_offset_multiplier:
                 for xom in x_offset_multiplier:
                     if xom == 0 and yom == 0 and zom == 0: continue
 
-                    ## Going with bead.copy().translate() for no great reason
-                    for bead in self.beads:
-                        stacked_beads.append(bead.copy().translate(xom*dx, yom*dy, zom*dz))
-
-                    # ## Alternatively append empty beads and then packedBed.generate():
+                    # ## Going with bead.copy().translate() for no great reason
                     # for bead in self.beads:
-                    #     stacked_beads.append(Bead(bead.x, bead.y, bead.z, bead.r))
+                    #     stacked_beads.append(bead.copy().translate(xom*dx, yom*dy, zom*dz))
 
-        self.beads.extend(stacked_beads)
+                    ## Alternatively append empty beads and then packedBed.generate():
+                    ## Probably faster since we don't have to perform a copy and then translate
+                    for bead in self.beads:
+                        self.beads.append(Bead(bead.x, bead.y, bead.z, bead.r))
+
+        # self.beads.extend(stacked_beads)
+        self.generate()
 
 
