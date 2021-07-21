@@ -22,13 +22,12 @@ VERSION = '0.1.0'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    # 'requests', 'maya', 'records',
-    'gmsh', 'pathlib'
+    'gmsh', 'numpy', 'pyyaml'
 ]
 
 # What packages are optional?
 EXTRAS = {
-    # 'fancy feature': ['django'],
+        'Colored logging': ['rich']
 }
 
 # The rest you shouldn't have to touch too much :)
@@ -106,7 +105,8 @@ setup(
     url=URL,
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
     # If your package is a single module, use this instead of 'packages':
-    # py_modules=['mypackage'],
+    # py_modules=['pymesh'],
+    scripts=['bin/mesh'],
 
     # entry_points={
     #     'console_scripts': ['mycli=mymodule:cli'],
