@@ -20,11 +20,12 @@ The script in `bin/` should be available in `$PATH` after the install. It is cur
 
 # Features roadmap
 - [PART] cylinder container shape
+- [NEXT] bridges, cuts
 - [TASK] porosity manipulation by bead addition/deletion
-- [TASK] bridges, cuts
 - [TASK] Move to numpy arrays
 - [TASK] check out numba njit
 - [TASK] Parallelize
+- [TASK] Profile stack_all
 
 # Known issues:
 - [CRIT] setting gmsh.General.NumThreads generates degenerate element surfaces. It's a gmsh issue.
@@ -32,3 +33,4 @@ The script in `bin/` should be available in `$PATH` after the install. It is cur
     - In paraview, extract surfaces and then clip to see the degenerate surfaces
 - OpenCASCADE fragment operation doesn't preserve surface normals of cut objects. But intersecting before fragmenting does.
 - stack_all() fails (possibly memory issues?) for large packings.
+
