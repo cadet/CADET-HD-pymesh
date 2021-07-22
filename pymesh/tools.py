@@ -83,7 +83,7 @@ def get_surface_normal_inner(surface:tuple):
     pCoord = gmsh.model.getParametrization(surface[0], surface[1], coord)
     curv = gmsh.model.getCurvature(surface[0], surface[1], pCoord)
     if any(curv):
-        return [0,0,0]
+        return np.array([0,0,0])
     normals = gmsh.model.getNormal(surface[1], pCoord)
 
     # normals = np.array(gmsh.model.getNormal(surface[1], pCoord)).reshape((len(curv), 3))

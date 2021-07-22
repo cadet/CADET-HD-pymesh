@@ -291,7 +291,10 @@ class PackedBed:
         for vol,normals in zip(cuts, normalss):
 
             ## Find flat wall normals for given volumes
-            wall_normals = [ n for n in normals if n != [0, 0, 0]]
+            # wall_normals = [ n for n in normals if n != [0,0,0] ]
+            normals = np.array(normals)
+            wall_normals = normals[np.any(normals != 0, axis=1), :]
+
 
             ## Find ALL non-zero lengthed combinations for the flat_normals
             ## Eg. with flat_normals = [ x, y ] ,
