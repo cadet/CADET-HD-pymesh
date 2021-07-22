@@ -4,6 +4,7 @@ from pymesh import ConfigHandler, Logger, Model, __version__
 
 import argparse
 import gmsh
+import subprocess
 
 
 def pymesh():
@@ -13,8 +14,17 @@ def pymesh():
 
     logger = Logger()
 
-    logger.note('GMSH API:', gmsh.GMSH_API_VERSION)
     logger.note('pymesh version:', __version__)
+    logger.note('GMSH API:', gmsh.GMSH_API_VERSION)
+
+    gmsh_version = 'unknown'
+    try:
+        gmsh_version = subprocess.check_output(["gmsh", "--version"], stderr=subprocess.STDOUT).strip().decode('utf8')
+    except subprocess.CalledProcessError:
+        pass
+
+    logger.note('GMSH Version:', gmsh_version)
+
 
     config = ConfigHandler(logger)
     config.read(args['file'])
