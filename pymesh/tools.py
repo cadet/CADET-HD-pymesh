@@ -102,22 +102,27 @@ def get_surface_normals(entities):
     """
     factory = gmsh.model.occ
     factory.synchronize()
-    output = []
-    for surface in entities:
-        points = gmsh.model.getBoundary([surface], False, False, True)
-        normals = []
-        coord = [x for point in points for x in gmsh.model.getValue(point[0], point[1], []) ]
-        pCoord = gmsh.model.getParametrization(surface[0], surface[1], coord)
-        curv = gmsh.model.getCurvature(surface[0], surface[1], pCoord)
-        normals = np.array(gmsh.model.getNormal(surface[1], pCoord)).reshape((len(curv), 3))
-        ## If normals of all points are the same,
-        ## (column-wise check if all numbers are same)
-        if all(np.all(normals == normals[0,:], axis = 0)):
-            output.append(normals[0].tolist())
-        else:
-            output.append([0.0,0.0,0.0])
-
+    output = [get_surface_normal_inner(surface) for surface in entities]
     return output
+
+def get_surface_normal_inner(surface:tuple):
+    points = gmsh.model.getBoundary([surface], False, False, True)
+    normals = []
+    coord = [x for point in points for x in gmsh.model.getValue(point[0], point[1], []) ]
+    pCoord = gmsh.model.getParametrization(surface[0], surface[1], coord)
+    curv = gmsh.model.getCurvature(surface[0], surface[1], pCoord)
+    if any(curv):
+        return [0,0,0]
+    normals = gmsh.model.getNormal(surface[1], pCoord)
+
+    # normals = np.array(gmsh.model.getNormal(surface[1], pCoord)).reshape((len(curv), 3))
+    ## If normals of all points are the same,
+    ## (column-wise check if all numbers are same)
+    # if all(np.all(normals == normals[0,:], axis = 0)):
+
+    ## If it's not a curved surface, all points have the same normal
+    return normals[0:3]
+
 
 def testMesh(fname, size=0.2):
     factory = gmsh.model.occ
