@@ -368,9 +368,7 @@ class PackedBed:
                     ## Alternatively append empty beads and then packedBed.generate():
                     ## Probably faster since we don't have to perform a copy and then translate
                     for bead in self.beads:
-                        stacked_beads.append(Bead(bead.x, bead.y, bead.z, bead.r))
+                        stacked_beads.append(Bead(bead.x + xom*dx, bead.y + yom*dy, bead.z + zom*dz, bead.r))
 
         self.beads.extend(stacked_beads)
         self.generate()
-
-
