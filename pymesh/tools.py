@@ -106,23 +106,16 @@ def get_surface_normals(entities):
     for surface in entities:
         points = gmsh.model.getBoundary([surface], False, False, True)
         normals = []
-        for point in points:
-            coord  = gmsh.model.getValue(point[0], point[1], [])
-            pCoord = gmsh.model.getParametrization(surface[0], surface[1], coord)
-            curv = gmsh.model.getCurvature(surface[0], surface[1], pCoord)
-            if any(curv):
-                # print("get_surface_normal: Detected non-zero curvature to surface", surface[1], ". Setting 0 normal...")
-                normals.append([0,0,0])
-            else:
-                normals.append(gmsh.model.getNormal(surface[1], pCoord))
-        normals = np.array(normals)
-        # print(normals)
+        coord = [x for point in points for x in gmsh.model.getValue(point[0], point[1], []) ]
+        pCoord = gmsh.model.getParametrization(surface[0], surface[1], coord)
+        curv = gmsh.model.getCurvature(surface[0], surface[1], pCoord)
+        normals = np.array(gmsh.model.getNormal(surface[1], pCoord)).reshape((len(curv), 3))
         ## If normals of all points are the same,
         ## (column-wise check if all numbers are same)
         if all(np.all(normals == normals[0,:], axis = 0)):
             output.append(normals[0].tolist())
         else:
-            raise(ValueError)
+            output.append([0.0,0.0,0.0])
 
     return output
 
