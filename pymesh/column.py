@@ -92,7 +92,7 @@ class Column:
             all = factory.getEntities(dim=3)
             factory.remove([e for e in all if e not in fmap[-1]], recursive=True)
 
-        self.entities = sorted(fmap[-1][:])
+        self.entities = sorted(fmap[-1])
 
         return self.entities
 
