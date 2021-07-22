@@ -219,7 +219,52 @@ class Column:
         gmsh.model.setPhysicalName(3, 5, "interstitial")
         gmsh.model.setPhysicalName(3, 6, "particles")
 
-    def write(self, fname):
+    def write(self, fname, writeFragments=True):
         self.set_physical_groups()
         gmsh.write(fname)
+
+        if writeFragments:
+            self.write_fragments(fname)
+
+    def write_fragments(self, fname):
+        from pathlib import Path
+
+        basename = Path(fname).stem
+        extension = Path(fname).suffix
+
+        gmsh.model.removePhysicalGroups()
+
+        gmsh.model.addPhysicalGroup(2, self.surfaces.get('inlet'), 11)
+        gmsh.model.setPhysicalName(2, 11, "inlet")
+
+        gmsh.model.addPhysicalGroup(2, self.surfaces.get('outlet'), 12)
+        gmsh.model.setPhysicalName(2, 12, "outlet")
+
+        gmsh.model.addPhysicalGroup(2, self.surfaces.get('walls'), 13)
+        gmsh.model.setPhysicalName(2, 13, "walls")
+
+        gmsh.write(basename + '_surfaces_inlet_outlet_walls' + extension)
+
+        gmsh.model.removePhysicalGroups()
+
+        gmsh.model.addPhysicalGroup(2, self.surfaces.get('particles'), 14)
+        gmsh.model.setPhysicalName(2, 14, "particles")
+
+        gmsh.write(basename + '_surfaces_particles' + extension)
+
+        gmsh.model.removePhysicalGroups()
+
+        gmsh.model.addPhysicalGroup(3, self.volumes.get('interstitial'), 15)
+        gmsh.model.setPhysicalName(3, 15, "interstitial")
+
+        gmsh.write(basename + '_volumes_interstitial' + extension)
+
+        gmsh.model.removePhysicalGroups()
+
+        gmsh.model.addPhysicalGroup(3, self.volumes.get('particles'), 16)
+        gmsh.model.setPhysicalName(3, 16, "particles")
+
+        gmsh.write(basename + '_volumes_particles' + extension)
+
+        gmsh.model.removePhysicalGroups()
 
