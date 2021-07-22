@@ -95,12 +95,12 @@ def get_surface_normal_inner(surface:tuple):
     return normals[0:3]
 
 
-def testMesh(fname, size=0.2):
+def testMesh(fname, size=0.2, dim=3):
     factory = gmsh.model.occ
     factory.synchronize()
     ent = gmsh.model.getEntities(0)
     gmsh.model.mesh.setSize(ent, size)
-    gmsh.model.mesh.generate(3)
+    gmsh.model.mesh.generate(dim)
     gmsh.write(fname)
 
 def remove_all_except(entities):
