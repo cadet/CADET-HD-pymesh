@@ -64,13 +64,11 @@ class Model:
                 self.packedBed.stack_all(column_periodicity, column_container.dx, column_container.dy, column_container.dz)
             elif self.stack_method == 'volumecut':
                 if self.container_linked:
-                    print("ConfigError: container.stack_method = volumecut cannot be used with container.linked = True")
-                    raise(ValueError)
+                    self.logger.die("ConfigError: container.stack_method = volumecut cannot be used with container.linked = True")
                 else:
                     self.packedBed.stack_by_volume_cuts(column_container)
-            else:
-                print("ConfigError: container.stack_method must be either 'planecut' or 'volumecut'", file=sys.stderr)
-                raise(ValueError)
+
+
 
         if self.container_linked :
             inlet_size =  [
