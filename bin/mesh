@@ -30,6 +30,7 @@ def pymesh():
     config.read(args['file'])
 
     gmsh.initialize()
+    gmsh.logger.start()
     gmsh.model.add("default")
 
     config.set_gmsh_defaults()
@@ -39,6 +40,10 @@ def pymesh():
     defaultModel.mesh()
     defaultModel.write()
 
+    with open(str(config.output_filename) + '.' + logger.timestamp + '.gmsh.log', 'w') as ofile:
+        ofile.write("\n".join(gmsh.logger.get()))
+
+    gmsh.logger.stop()
     gmsh.finalize()
 
     logger.write(config.output_filename)

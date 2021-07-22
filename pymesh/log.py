@@ -11,10 +11,12 @@ except ImportError:
     def Text(*obj, style=None):
         return "".join(obj)
 
+import datetime
 
 class Logger:
-    logout = ""
-    logerr = ""
+    logout = []
+    logerr = []
+    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 
     def __init__(self, level=0):
         self.level = level
@@ -23,7 +25,7 @@ class Logger:
         """
         Default print (without Text wrapper) to be able to print dicts and other stuff
         """
-        Logger.logout = "".join([Logger.logout, str(*message), '\n'])
+        Logger.logout.extend([str(i) for i in message])
         rprint(*message)
 
     def out(self, *message, style=None):
@@ -32,7 +34,7 @@ class Logger:
         """
         prepend = "".join([' ']*self.level*2) + '|--> '
         msg = prepend + " ".join(message)
-        Logger.logout = "".join([Logger.logout, msg, '\n'])
+        Logger.logout.append(msg)
         rprint(Text(msg, style=style))
 
     def err(self, *message):
@@ -40,7 +42,7 @@ class Logger:
         Write to stderr
         """
         msg = " ".join(message)
-        Logger.logerr = "".join([Logger.logerr, 'ERROR: ' + msg, '\n'])
+        Logger.logerr.append('ERROR: ' + msg)
         rprint(Text("ERROR: " + msg, style="bold red"))
 
     def warn(self, *message):
@@ -48,7 +50,7 @@ class Logger:
         Write to stderr
         """
         msg = " ".join(message)
-        Logger.logerr = "".join([Logger.logerr, 'WARN: ' + msg, '\n'])
+        Logger.logerr.append('WARN: ' + msg)
         rprint(Text("WARN: " + msg, style="bold yellow"))
 
     def note(self, *message):
@@ -56,7 +58,7 @@ class Logger:
         Write to stderr
         """
         msg = " ".join(message)
-        Logger.logerr = "".join([Logger.logerr, 'NOTE: ' + msg, '\n'])
+        Logger.logerr.append('NOTE: ' + msg)
         rprint(Text("NOTE: " + msg, style="bold magenta"))
 
     def die(self, *message, exception=RuntimeError):
@@ -70,9 +72,7 @@ class Logger:
         """
         write to files
         """
-        import datetime
-        timestamp = '.' + datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-        with open(fname + timestamp + '.stdout.log', 'w') as outfile:
-            outfile.write(self.logout)
-        with open(fname + timestamp + '.stderr.log', 'w') as errfile:
-            errfile.write(self.logerr)
+        with open(fname + '.' + Logger.timestamp + '.stdout.log', 'w') as outfile:
+            outfile.write("\n".join(self.logout))
+        with open(fname + '.' + Logger.timestamp + '.stderr.log', 'w') as errfile:
+            errfile.write("\n".join(self.logerr))
