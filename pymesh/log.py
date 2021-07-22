@@ -70,7 +70,9 @@ class Logger:
         """
         write to files
         """
-        with open(fname + '.stdout.log', 'w') as outfile:
+        import datetime
+        timestamp = '.' + datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+        with open(fname + timestamp + '.stdout.log', 'w') as outfile:
             outfile.write(self.logout)
-        with open(fname + '.stderr.log', 'w') as errfile:
+        with open(fname + timestamp + '.stderr.log', 'w') as errfile:
             errfile.write(self.logerr)
