@@ -17,8 +17,18 @@ class Logger:
     logout = []
     logerr = []
     timestamp = "." + datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    glyph_head = '|-->'
+    default_out_style = "bold green"
+    glyph_head = '❯❯'
     glyph_tail = ' '
+    indent_factor = 2
+
+    # glyph_head = '|-->'
+    # glyph_tail = ' '
+    # glyph_head = 'INFO:'
+    # glyph_tail = ''
+    # glyph_head = '->>'
+    # glyph_tail = '->>'
+
 
     def __init__(self, level=0):
         self.level = level
@@ -34,10 +44,10 @@ class Logger:
         """
         Write to stdout
         """
-        prepend = "".join([Logger.glyph_tail]*self.level*2) + Logger.glyph_head + ' '
+        prepend = "".join([Logger.glyph_tail]*self.level*Logger.indent_factor) + Logger.glyph_head + ' '
         msg = prepend + " ".join(message)
         Logger.logout.append(msg)
-        rprint(Text(msg, style=style))
+        rprint(Text(msg, style=style or Logger.default_out_style))
 
     def err(self, *message):
         """
