@@ -70,11 +70,12 @@ class Logger:
         self.err(*message)
         raise(exception)
 
-    def write(self, fname):
+    def write(self, fname, timestamp=False):
         """
         write to files
         """
-        with open(fname + Logger.timestamp + '.stdout.log', 'w') as outfile:
+        ts = Logger.timestamp if timestamp else ''
+        with open(fname + ts + '.stdout.log', 'w') as outfile:
             outfile.write("\n".join(self.logout))
-        with open(fname + Logger.timestamp + '.stderr.log', 'w') as errfile:
+        with open(fname + ts + '.stderr.log', 'w') as errfile:
             errfile.write("\n".join(self.logerr))

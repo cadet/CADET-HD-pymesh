@@ -44,9 +44,10 @@ def pymesh():
     except:
         raise
     finally:
-        with open(str(config.output_filename) + '.' + logger.timestamp + '.gmsh.log', 'w') as ofile:
+        ts = logger.timestamp if config.output_log_timestamp else ''
+        with open(str(config.output_filename) + ts + '.gmsh.log', 'w') as ofile:
             ofile.write("\n".join(gmsh.logger.get()))
-        logger.write(config.output_filename)
+        logger.write(config.output_filename, timestamp=config.output_log_timestamp)
 
     gmsh.logger.stop()
     gmsh.finalize()

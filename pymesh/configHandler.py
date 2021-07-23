@@ -97,6 +97,7 @@ class ConfigHandler:
         self.mesh_generate                       = self.get('mesh.generate', 3, int, [0,1,2,3])
 
         self.output_filename                     = self.get('output.filename', 'output.vtk', str())
+        self.output_log_timestamp                = self.get('output.log_timestamp', False, bool)
 
     def set_gmsh_defaults(self):
 
