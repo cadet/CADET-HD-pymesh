@@ -25,28 +25,30 @@ def pymesh():
 
     logger.note('GMSH Version:', gmsh_version)
 
-
     config = ConfigHandler(logger)
     config.read(args['file'])
 
-    gmsh.initialize()
-    gmsh.logger.start()
-    gmsh.model.add("default")
+    try:
+        gmsh.initialize()
+        gmsh.logger.start()
+        gmsh.model.add("default")
 
-    config.set_gmsh_defaults()
-    config.set_gmsh_options()
+        config.set_gmsh_defaults()
+        config.set_gmsh_options()
 
-    defaultModel = Model(config)
-    defaultModel.mesh()
-    defaultModel.write()
+        defaultModel = Model(config)
 
-    with open(str(config.output_filename) + '.' + logger.timestamp + '.gmsh.log', 'w') as ofile:
-        ofile.write("\n".join(gmsh.logger.get()))
+        defaultModel.mesh()
+        defaultModel.write()
 
-    gmsh.logger.stop()
-    gmsh.finalize()
-
-    logger.write(config.output_filename)
+        gmsh.logger.stop()
+        gmsh.finalize()
+    except:
+        raise
+    finally:
+        with open(str(config.output_filename) + '.' + logger.timestamp + '.gmsh.log', 'w') as ofile:
+            ofile.write("\n".join(gmsh.logger.get()))
+        logger.write(config.output_filename)
 
 if __name__ == "__main__":
     pymesh()
