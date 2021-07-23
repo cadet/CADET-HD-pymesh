@@ -20,6 +20,11 @@ class Logger:
     default_out_style = "bold green"
     glyph_head = '❯❯'
     glyph_tail = ' '
+    glyph_end = ''
+    # glyph_end  = '❮❮'
+    # glyph_head  = '❮❮'
+    # glyph_tail = ' '
+    # glyph_end = '❯❯'
     indent_factor = 2
 
     # glyph_head = '|-->'
@@ -45,7 +50,7 @@ class Logger:
         Write to stdout
         """
         prepend = "".join([Logger.glyph_tail]*self.level*Logger.indent_factor) + Logger.glyph_head + ' '
-        msg = prepend + " ".join(message)
+        msg = prepend + " ".join(message) + ' ' + Logger.glyph_end
         Logger.logout.append(msg)
         rprint(Text(msg, style=style or Logger.default_out_style))
 
