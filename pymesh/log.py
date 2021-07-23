@@ -16,7 +16,9 @@ import datetime
 class Logger:
     logout = []
     logerr = []
-    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    timestamp = "." + datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    glyph_head = '|-->'
+    glyph_tail = ' '
 
     def __init__(self, level=0):
         self.level = level
@@ -32,7 +34,7 @@ class Logger:
         """
         Write to stdout
         """
-        prepend = "".join([' ']*self.level*2) + '|--> '
+        prepend = "".join([Logger.glyph_tail]*self.level*2) + Logger.glyph_head + ' '
         msg = prepend + " ".join(message)
         Logger.logout.append(msg)
         rprint(Text(msg, style=style))
@@ -72,7 +74,7 @@ class Logger:
         """
         write to files
         """
-        with open(fname + '.' + Logger.timestamp + '.stdout.log', 'w') as outfile:
+        with open(fname + Logger.timestamp + '.stdout.log', 'w') as outfile:
             outfile.write("\n".join(self.logout))
-        with open(fname + '.' + Logger.timestamp + '.stderr.log', 'w') as errfile:
+        with open(fname + Logger.timestamp + '.stderr.log', 'w') as errfile:
             errfile.write("\n".join(self.logerr))
