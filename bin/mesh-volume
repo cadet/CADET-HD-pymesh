@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+
+from pymesh import Logger, __version__
+from rich.console import Console
+
+import gmsh
+import argparse
+import subprocess
+
+console = Console()
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("file", help="Input file")
+    args = vars(ap.parse_args())
+
+    logger = Logger()
+
+    logger.note('pymesh version:', __version__)
+    logger.note('GMSH API:', gmsh.GMSH_API_VERSION)
+
+    gmsh_version = 'unknown'
+    try:
+        gmsh_version = subprocess.check_output(["gmsh", "--version"], stderr=subprocess.STDOUT).strip().decode('utf8')
+    except subprocess.CalledProcessError:
+        pass
+
+    logger.note('GMSH Version:', gmsh_version)
+
+    gmsh.initialize()
+
+    gmsh.option.setNumber("General.Terminal", 1)
+
+    gmsh.merge(args['file'])
+
+    print("[Column]")
+    gmsh.plugin.setNumber("MeshVolume", "PhysicalGroup", -1)
+    gmsh.plugin.setNumber("MeshVolume", "Dimension", 3)
+    gmsh.plugin.run("MeshVolume")
+
+    _, _, data = gmsh.view.getListData(0)
+    volume_column = data[0][-1]
+
+    print("[Interstitial]")
+    gmsh.plugin.setNumber("MeshVolume", "PhysicalGroup", 5)
+    gmsh.plugin.setNumber("MeshVolume", "Dimension", 3)
+    gmsh.plugin.run("MeshVolume")
+
+    _, _, data = gmsh.view.getListData(1)
+    volume_interstitial = data[0][-1]
+
+    print("[Packed Bed]")
+    gmsh.plugin.setNumber("MeshVolume", "PhysicalGroup", 6)
+    gmsh.plugin.setNumber("MeshVolume", "Dimension", 3)
+    gmsh.plugin.run("MeshVolume")
+
+    _, _, data = gmsh.view.getListData(2)
+    volume_packedBed = data[0][-1]
+
+    console.log('Calculated Mesh Porosity:', volume_interstitial/volume_column)
+
+
+if __name__ == '__main__':
+    main()
+

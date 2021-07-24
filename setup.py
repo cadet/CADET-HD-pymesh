@@ -125,7 +125,7 @@ setup(
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
     # If your package is a single module, use this instead of 'packages':
     # py_modules=['pymesh'],
-    scripts=['bin/mesh'],
+    scripts=['bin/mesh', 'bin/mesh-volume'],
 
     # entry_points={
     #     'console_scripts': ['mycli=mymodule:cli'],
