@@ -73,7 +73,8 @@ def get_surface_normals(entities):
     """
     factory = gmsh.model.occ
     factory.synchronize()
-    output = [get_surface_normal_inner(surface) for surface in entities]
+    # output = [get_surface_normal_inner(surface) for surface in entities]
+    output = [get_surface_normal_inner_firstpoint(surface) for surface in entities]
     return output
 
 def get_surface_normal_inner(surface:tuple):
@@ -94,6 +95,16 @@ def get_surface_normal_inner(surface:tuple):
     ## If it's not a curved surface, all points have the same normal
     return normals[0:3]
 
+def get_surface_normal_inner_firstpoint(surface:tuple):
+    points = gmsh.model.getBoundary([surface], False, False, True)
+    point = points[0]
+    coord = gmsh.model.getValue(point[0], point[1], [])
+    pCoord = gmsh.model.getParametrization(surface[0], surface[1], coord)
+    curv = gmsh.model.getCurvature(surface[0], surface[1], pCoord)
+    if any(curv):
+        return np.array([0,0,0])
+    normal = gmsh.model.getNormal(surface[1], pCoord)
+    return normal
 
 def testMesh(fname, size=0.2, dim=3):
     factory = gmsh.model.occ

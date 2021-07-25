@@ -13,7 +13,7 @@ container:
   shape: box
   size: [0, 0, 0, 4, 4, 4]
   periodicity: xyz
-  linked: True
+  linked: False
   stack_method: volumecut
   inlet_length: 2.0
   outlet_length: 2.0
@@ -28,9 +28,9 @@ mesh:
       rad_max_factor: 0.6
   algorithm: 5
   algorithm3D: 10
-  generate: 1
+  generate: 3
 output:
-  filename: mesh.vtk
+  filename: mesh.msh2
 gmsh:
   General.Verbosity: 5
   Geometry.OCCParallel: 1
