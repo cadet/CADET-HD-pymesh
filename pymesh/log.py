@@ -13,9 +13,6 @@ class Logger:
     log_err_all = []
     timestamp = "." + datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 
-    # default_out_style = Style.parse("bold green")
-    # default_out_tag_style = Style.parse("bold black on green")
-
     custom_theme = Theme({
         "info" : 'bold green',
         "note": "bold magenta",
@@ -27,8 +24,8 @@ class Logger:
     def __init__(self, level=0):
         self.level = level
 
-    def rule(self):
-        pass
+    def rule(self, *message):
+        Logger.console.rule(*message)
 
     def print(self, *message):
         """
