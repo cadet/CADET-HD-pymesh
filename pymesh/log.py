@@ -2,15 +2,9 @@
 Log class for pymesh
 """
 
-try:
-    from rich import print as rprint
-    from rich.text import Text
-    # from rich.console import Console
-except ImportError:
-    def rprint(obj):
-        print(obj)
-    def Text(*obj, style=None):
-        return "".join(obj)
+from rich import print as rprint
+from rich.console import Console
+from rich.theme import Theme
 
 import datetime
 
@@ -18,35 +12,23 @@ class Logger:
     log_out_all = []
     log_err_all = []
     timestamp = "." + datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    default_out_style = "bold green"
-    # console = Console()
 
-    # glyph_head = '❯❯'
-    glyph_head = '❯'
-    glyph_tail = '❯'
-    glyph_end = ''
-    # glyph_end  = '❮❮'
-    # glyph_head  = '❮❮'
-    # glyph_tail = ' '
-    # glyph_end = '❯❯'
-    indent_factor = 1
+    # default_out_style = Style.parse("bold green")
+    # default_out_tag_style = Style.parse("bold black on green")
 
-    # glyph_head = ''
-    # glyph_tail = ' '
-    # glyph_end = ''
-
-    # gleft = ''
-
-    # glyph_head = '|-->'
-    # glyph_tail = ' '
-    # glyph_head = 'INFO:'
-    # glyph_tail = ''
-    # glyph_head = '->>'
-    # glyph_tail = '->>'
-
+    custom_theme = Theme({
+        "info" : 'bold green',
+        "note": "bold magenta",
+        "warn": "bold yellow",
+        "error": "bold red"
+    })
+    console = Console(theme = custom_theme)
 
     def __init__(self, level=0):
         self.level = level
+
+    def rule(self):
+        pass
 
     def print(self, *message):
         """
@@ -59,34 +41,29 @@ class Logger:
         """
         Write to stdout
         """
-        prepend = "".join([Logger.glyph_tail]*self.level*Logger.indent_factor) + Logger.glyph_head + ' '
-        msg = "INFO" + prepend + " ".join(message) + ' ' + Logger.glyph_end
-        Logger.log_out_all.append(msg)
-        rprint(Text(msg, style=style or Logger.default_out_style))
+        Logger.log_out_all.append(" ".join(['INFO:' + "".join([' ']*self.level), *message]))
+        Logger.console.print('INFO    :' + "".join([' ']*self.level), *message, style=style or 'info')
 
     def err(self, *message):
         """
-        Write to stderr
+        Write to "stderr"
         """
-        msg = " ".join(message)
-        Logger.log_err_all.append('ERROR: ' + msg)
-        rprint(Text("ERROR: " + msg, style="bold red"))
+        Logger.log_out_all.append(" ".join(['ERROR:', *message]))
+        Logger.console.print('ERROR:', *message, style='error')
 
     def warn(self, *message):
         """
         Write to stderr
         """
-        msg = " ".join(message)
-        Logger.log_err_all.append('WARN: ' + msg)
-        rprint(Text("WARN: " + msg, style="bold yellow"))
+        Logger.log_out_all.append(" ".join(['WARN:', *message]))
+        Logger.console.print('WARN:', *message, style='warn')
 
     def note(self, *message):
         """
         Write to stderr
         """
-        msg = " ".join(message)
-        Logger.log_err_all.append('NOTE: ' + msg)
-        rprint(Text("NOTE: " + msg, style="bold magenta"))
+        Logger.log_out_all.append(" ".join(['NOTE:', *message]))
+        Logger.console.print('NOTE:', *message, style='note')
 
     def die(self, *message, exception=RuntimeError):
         """
