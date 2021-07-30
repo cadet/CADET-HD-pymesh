@@ -45,14 +45,14 @@ class Logger:
         """
         Write to "stderr"
         """
-        Logger.log_out_all.append(" ".join(['ERROR:', *message]))
+        Logger.log_err_all.append(" ".join(['ERROR:', *message]))
         Logger.console.print('ERROR:', *message, style='error')
 
     def warn(self, *message):
         """
         Write to stderr
         """
-        Logger.log_out_all.append(" ".join(['WARN:', *message]))
+        Logger.log_err_all.append(" ".join(['WARN:', *message]))
         Logger.console.print('WARN:', *message, style='warn')
 
     def note(self, *message):
