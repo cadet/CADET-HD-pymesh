@@ -9,7 +9,6 @@ Plus a rewrite helps me reorganize the software at an architectural level.
 # Install
 The best idea is to just use conda, create your environment, install necessary dependencies, install pip in conda, and then do `pip install .`
 
-
 If gmsh is built from source, ensure that 
     - PYTHONPATH points to $GMSH_ROOT/lib (or wherever the gmsh.py file is)
     - LD_LIBRARY_PATH points to $GMSH_ROOT/lib (or wherever the gmsh{.so,.a} files are)
@@ -30,7 +29,9 @@ The script in `bin/` should be available in `$PATH` after the install. It is cur
 - [DONE] Timestamp in log filenames
 - [TASK] Add JSON support
 - [TASK] Consider ruamel_yaml
-- [TASK] Geometry save and load
+- [TASK] Geometry save and load: stashed
+- [TASK] Improve memory usage
+    - separate_bounding_surfaces()
 
 # Known issues:
 - [CRIT] setting gmsh.General.NumThreads generates degenerate element surfaces. It's a gmsh issue.
@@ -41,8 +42,14 @@ The script in `bin/` should be available in `$PATH` after the install. It is cur
 - Meshes fail on servers (IBT067 and IBT012) even though the whole toolchain was recompiled. Locally, IBT918, Arch Linux, those same meshes and configs work
     - OCCT 7.5.0-3 (some patches for install location changes in OCCT, but otherwise the same)
     - GMSH 4.8.4 (from git tag gmsh_4_8_4)
-    - Fixed by setting the following in input.yaml::gmsh:
+    - Fixed (partially) by setting the following in input.yaml::gmsh:
         - Geometry.OCCBoundsUseStl: 1
         - Mesh.StlAngularDeflection: 0.08
         - Mesh.StlLinearDeflection: 0.0005
+    - It also seems to be mesh size dependent(???)
     
+https://gitlab.onelab.info/gmsh/gmsh/-/issues/1246
+https://gitlab.onelab.info/gmsh/gmsh/-/issues/1061
+https://gitlab.onelab.info/gmsh/gmsh/-/issues/1330
+https://gitlab.onelab.info/gmsh/gmsh/-/issues/1480
+https://gitlab.onelab.info/gmsh/gmsh/-/issues/338
