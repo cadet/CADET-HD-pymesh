@@ -37,14 +37,15 @@ def get_volume_normals(entities):
     """
     gmsh.model.occ.synchronize()
 
-    output = []
+    # output = []
 
     for e in entities:
         boundaries = gmsh.model.getBoundary([e], False, False, False)
-        normals = get_surface_normals(boundaries)
-        output.append(normals)
+        normals = list(get_surface_normals(boundaries))
+        yield normals
+        # output.append(normals)
 
-    return output
+    # return output
 
 def filter_volumes_with_normal(entities, ref_normal):
     """
@@ -74,8 +75,10 @@ def get_surface_normals(entities):
     factory = gmsh.model.occ
     factory.synchronize()
     # output = [get_surface_normal_inner(surface) for surface in entities]
-    output = [get_surface_normal_inner_firstpoint(surface) for surface in entities]
-    return output
+    # output = [get_surface_normal_inner_firstpoint(surface) for surface in entities]
+    # return output
+    for surface in entities:
+        yield get_surface_normal_inner_firstpoint(surface)
 
 def get_surface_normal_inner(surface:tuple):
     points = gmsh.model.getBoundary([surface], False, False, True)
