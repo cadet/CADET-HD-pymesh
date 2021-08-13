@@ -13,6 +13,7 @@ from pymesh.tools import bin_to_arr, grouper, get_surface_normals, get_volume_no
 from pymesh.bead import Bead
 from pymesh.log import Logger
 
+import struct
 import numpy as np
 import gmsh
 
@@ -79,6 +80,14 @@ class PackedBed:
     def tags(self):
         # return self.entities
         return [ b.tag for b in self.beads ]
+
+    def write(self, filename, dataformat='<d'):
+        with(open(filename, 'wb')) as output:
+            for bead in self.beads:
+                output.write(struct.pack(dataformat,bead.x))
+                output.write(struct.pack(dataformat,bead.y))
+                output.write(struct.pack(dataformat,bead.z))
+                output.write(struct.pack(dataformat,bead.r * 2))
 
     def updateBounds(self):
         """

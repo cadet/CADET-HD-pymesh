@@ -68,7 +68,7 @@ class Model:
                 else:
                     self.packedBed.stack_by_volume_cuts(column_container)
 
-
+        self.packedBed.write('beads_used.xyzd')
 
         if self.container_linked :
             inlet_size =  [
