@@ -10,12 +10,61 @@ Plus a rewrite helps me reorganize the software at an architectural level.
 The best idea is to just use conda, create your environment, install necessary dependencies, install pip in conda, and then do `pip install .`
 
 If gmsh is built from source, ensure that 
-    - PYTHONPATH points to $GMSH_ROOT/lib (or wherever the gmsh.py file is)
-    - LD_LIBRARY_PATH points to $GMSH_ROOT/lib (or wherever the gmsh{.so,.a} files are)
+    - `PYTHONPATH` points to `$GMSH_ROOT/lib` (or wherever the gmsh.py file is)
+    - `LD_LIBRARY_PATH` points to `$GMSH_ROOT/lib` (or wherever the gmsh{.so,.a} files are)
 
 # Usage
 
 The script in `bin/` should be available in `$PATH` after the install. It is currently called `mesh`. Given the appropriate input file in yaml format, run: `mesh input.yaml`
+
+# Dummy yaml
+```yaml
+packedbed:
+  packing_file:
+    filename: packing.xyzd
+    dataformat: <d
+  nbeads: 4
+  scaling_factor: 1.0
+  # auto_translate: True
+  particles:
+    scaling_factor: 0.9997
+    # modification: bridge | cut 
+    # relative_bridge_radius: ...
+container:
+  shape: cylinder
+  size: [ 0.0, 0.0, -0.5, 0.0, 0.0, 4.0, 0.5 ]
+  # size: [-2, -2, 0, 4, 4, 4]
+  # periodicity: 
+  # linked: True
+  # stack_method: planecut
+  # inlet_length: 0.0
+  # outlet_length: 0.0
+mesh:
+  # size: 0.15
+  size_method: field
+  field:
+    threshold:
+      size_in: 0.06
+      size_out: 0.14
+      rad_min_factor: 0.4
+      rad_max_factor: 0.6
+  algorithm: 5
+  algorithm3D: 10
+  generate: 2
+output:
+  filename: mesh.vtk
+gmsh:
+  General.Verbosity: 5
+  Geometry.OCCParallel: 1
+  Mesh.MaxNumThreads1D: 8
+  Mesh.MaxNumThreads2D: 8
+  Mesh.MaxNumThreads3D: 8
+  Mesh.ScalingFactor: 0.0001
+```
+
+# Notes
+- For `shape: cyl`, `size: [x, y, z, dx, dy, dz, r]`
+- For `shape: box`, `size: [x, y, z, dx, dy, dz]`
 
 # Features roadmap
 - [PART] cylinder container shape
