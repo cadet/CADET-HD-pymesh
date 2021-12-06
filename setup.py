@@ -41,12 +41,13 @@ VERSION = git_version()
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'gmsh', 'numpy', 'pyyaml'
+    'numpy', 'pyyaml', 'gitpython'
 ]
 
 # What packages are optional?
 EXTRAS = {
-        'Colored logging': ['rich']
+        'Colored logging': ['rich'],
+        'GMSH': ['gmsh']
 }
 
 # The rest you shouldn't have to touch too much :)
