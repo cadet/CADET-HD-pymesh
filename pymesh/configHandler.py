@@ -11,7 +11,10 @@ contract:
         Defaults are set within callers.
 
 """
-import yaml
+
+from ruamel.yaml import YAML
+from pathlib import Path
+
 import gmsh
 
 from functools import reduce
@@ -22,14 +25,14 @@ from pymesh.log import Logger
 class ConfigHandler:
 
     def __init__(self, logger=None):
+        self.yaml=YAML(typ='safe')
         self.logger = logger or Logger()
         self.logger.out('Creating config')
         self.config = {}
 
     def read(self, fname):
         self.logger.out('Reading config file')
-        with open(fname, 'r') as fp:
-            self.config = yaml.load(fp, Loader=yaml.FullLoader)
+        self.config = self.yaml.load(Path(fname))
         self.logger.print(self.config)
         self.load()
 

@@ -1,4 +1,4 @@
 numpy
-pyyaml
 rich
 gitpython
+ruamel.yaml

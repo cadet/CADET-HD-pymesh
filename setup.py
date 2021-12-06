@@ -41,7 +41,7 @@ VERSION = git_version()
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'numpy', 'pyyaml', 'gitpython'
+    'numpy', 'ruamel.yaml', 'gitpython'
 ]
 
 # What packages are optional?
