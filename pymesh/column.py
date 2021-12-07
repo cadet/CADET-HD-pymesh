@@ -30,6 +30,8 @@ class Column:
         self.logger=logger
         self.logger.out('Initializing column')
 
+        self.container_shape = container.shape
+
         self.surfaces = {
                 'inlet' : [],
                 'outlet' : [],
@@ -49,6 +51,7 @@ class Column:
         }
 
         self.fragment(packedBed.dimTags, container.dimTags, copyObject=copy, removeObject=True, removeTool=True, cleanFragments=True)
+
 
         self.separate_volumes()
         self.separate_bounding_surfaces()
@@ -107,55 +110,74 @@ class Column:
         Given a fragmented 3D column, extract bounding surfaces and separate them based on their normals in the cardinal directions.
         """
 
-        ## TODO: for cylinders
-
         self.logger.out('Separating surfaces')
 
         factory = gmsh.model.occ
         factory.synchronize()
 
-        bounding_surfaces = gmsh.model.getBoundary(self.entities, combined=False, oriented=False, recursive=False)
+        if self.container_shape == "box":
+            """
+            Note: In periodic boxes, we may can have intersected bead and wall surfaces
+            """
 
-        normals = get_surface_normals(bounding_surfaces)
+            # TODO: Remove duplicates
 
-        xm = []
-        xp = []
-        ym = []
-        yp = []
-        zm = []
-        zp = []
+            bounding_surfaces = gmsh.model.getBoundary(self.entities, combined=False, oriented=False, recursive=False)
 
-        beads = []
+            normals = get_surface_normals(bounding_surfaces)
 
-        for s,n in zip(bounding_surfaces, normals):
+            xm = []
+            xp = []
+            ym = []
+            yp = []
+            zm = []
+            zp = []
 
-            if np.array_equal(n,[-1,0,0]):
-                xm.append(s[1])
-            elif np.array_equal(n,[1,0,0]):
-                xp.append(s[1])
-            elif np.array_equal(n,[0,-1,0]):
-                ym.append(s[1])
-            elif np.array_equal(n,[0,1,0]):
-                yp.append(s[1])
-            elif np.array_equal(n,[0,0,-1]):
-                zm.append(s[1])
-            elif np.array_equal(n,[0,0,1]):
-                zp.append(s[1])
-            elif np.array_equal(n,[0,0,0]):
-                beads.append(s[1])
+            beads = []
 
-        self.walls.update({'x-': xm})
-        self.walls.update({'x+': xp})
-        self.walls.update({'y-': ym})
-        self.walls.update({'y+': yp})
-        self.walls.update({'z-': zm})
-        self.walls.update({'z+': zp})
+            for s,n in zip(bounding_surfaces, normals):
 
-        self.surfaces.update({'particles': beads})
+                if np.array_equal(n,[-1,0,0]):
+                    xm.append(s[1])
+                elif np.array_equal(n,[1,0,0]):
+                    xp.append(s[1])
+                elif np.array_equal(n,[0,-1,0]):
+                    ym.append(s[1])
+                elif np.array_equal(n,[0,1,0]):
+                    yp.append(s[1])
+                elif np.array_equal(n,[0,0,-1]):
+                    zm.append(s[1])
+                elif np.array_equal(n,[0,0,1]):
+                    zp.append(s[1])
+                elif np.array_equal(n,[0,0,0]):
+                    beads.append(s[1])
 
-        self.surfaces.update({'inlet': zm})
-        self.surfaces.update({'outlet': zp})
-        self.surfaces.update({'walls': xm + xp + ym + yp})
+            self.walls.update({'x-': xm})
+            self.walls.update({'x+': xp})
+            self.walls.update({'y-': ym})
+            self.walls.update({'y+': yp})
+            self.walls.update({'z-': zm})
+            self.walls.update({'z+': zp})
+
+            self.surfaces.update({'particles': beads})
+
+            self.surfaces.update({'inlet': zm})
+            self.surfaces.update({'outlet': zp})
+            self.surfaces.update({'walls': xm + xp + ym + yp})
+
+        elif self.container_shape == "cylinder":
+            """
+            Note: Since we expect cleaner boundaries, we can get away with subtracting here.
+            """
+
+            particle_surfaces     = gmsh.model.getBoundary([ (3,tag) for tag in self.volumes.get('particles', []) ], combined   =False, oriented=False, recursive=False)
+            interstitial_surfaces = gmsh.model.getBoundary([ (3,tag) for tag in self.volumes.get('interstitial', []) ], combined=False, oriented=False, recursive=False)
+            container_surfaces    = [x for x in interstitial_surfaces if x not in particle_surfaces]
+
+            self.surfaces.update({'particles': [x[1] for x in particle_surfaces]})
+            self.surfaces.update({'inlet'    : [container_surfaces[2][1]]})
+            self.surfaces.update({'outlet'   : [container_surfaces[1][1]]})
+            self.surfaces.update({'walls'    : [container_surfaces[0][1]]})
 
 
     def match_periodic_surfaces(self, sLeft, sRight, perDir, distance):
