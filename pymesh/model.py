@@ -97,7 +97,7 @@ class Model:
             self.outlet = Column(outlet_container, self.packedBed, copy=True, periodicity=inout_periodicity)
 
         self.logger.out('Creating central column section')
-        self.column = Column(column_container, self.packedBed, copy=False, periodicity=column_periodicity)
+        self.column = Column(column_container, self.packedBed, copy=False, periodicity=column_periodicity, endFaceSections=config.container_end_face_sections)
 
     def set_mesh_size(self):
         self.logger.out("Setting mesh size")

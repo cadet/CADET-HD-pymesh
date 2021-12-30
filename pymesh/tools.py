@@ -67,6 +67,15 @@ def filter_volumes_with_normal(entities, ref_normal):
 
     return output_entities
 
+def filter_surfaces_with_normal(entities, ref_normal):
+    """
+    Given a list of 2D entities and reference normal, return a list of entities with surfaces
+    """
+
+    normals = get_surface_normals(entities)
+
+    return [ x[0] for x in filter(lambda z: np.allclose(z[1],ref_normal), zip(entities,normals))]
+
 
 def get_surface_normals(entities):
     """

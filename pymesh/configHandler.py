@@ -4,11 +4,10 @@ ConfigHandler class.
 
 contract:
     - must read and store values from yaml config
+    - must load values into public attributes.
     - must provide easy access to deep/nested values (deep_get -> get)
     - must set gmsh default values
-    - [TASK] must set dynamic gmsh defaults from config.gmsh
-    - [NOTE] By current design, there are no global defaults for input options.
-        Defaults are set within callers.
+    - must set dynamic gmsh defaults from config.gmsh
 
 """
 
@@ -89,6 +88,7 @@ class ConfigHandler:
         self.container_stack_method              = self.get('container.stack_method', 'planecut', str(), ['planecut', 'volumecut', 'all'])
         self.container_inlet_length              = self.get('container.inlet_length', 0.0, float)
         self.container_outlet_length             = self.get('container.outlet_length', 0.0, float)
+        self.container_end_face_sections         = self.get('container.end_face_sections', 1, int)
 
         self.mesh_size_method                    = self.get('mesh.size_method', 'global', str(), ['global', 'field'])
         self.mesh_size                           = self.get('mesh.size', 0.2, float)

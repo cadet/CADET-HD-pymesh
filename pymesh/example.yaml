@@ -18,6 +18,7 @@ container:
   inlet_length: 1.5
   outlet_length: 1.5
   periodicity: True
+  end_face_sections: 5
 mesh:
   size: 0.2
   sizeout: 0.2

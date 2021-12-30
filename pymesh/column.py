@@ -10,16 +10,15 @@ contract:
 
 import gmsh
 
-from pymesh.tools import get_surface_normals, testMesh, remove_all_except
+from pymesh.tools import get_surface_normals, filter_surfaces_with_normal, testMesh, remove_all_except
 from pymesh.log import Logger
 
 import numpy as np
 import numpy.ma as ma
-from itertools import combinations
 
 class Column:
 
-    def __init__(self, container, packedBed, copy=False, periodicity:str='', logger=Logger(level=1)):
+    def __init__(self, container, packedBed, copy=False, periodicity:str='', endFaceSections=1, logger=Logger(level=1)):
         """
         Create a column object given a container and a packedBed
             - Fragment packedBed and container
@@ -31,6 +30,9 @@ class Column:
         self.logger.out('Initializing column')
 
         self.container_shape = container.shape
+
+        self.container = container
+        self.packedBed = packedBed
 
         self.surfaces = {
                 'inlet' : [],
@@ -50,7 +52,9 @@ class Column:
                 'particles': []
         }
 
-        self.fragment(packedBed.dimTags, container.dimTags, copyObject=copy, removeObject=True, removeTool=True, cleanFragments=True)
+        in_wires, out_wires = self.get_inlet_outlet_wires(endFaceSections)
+
+        self.fragment(packedBed.dimTags + in_wires + out_wires, container.dimTags, copyObject=copy, removeObject=True, removeTool=True, cleanFragments=True)
 
 
         self.separate_volumes()
@@ -175,10 +179,42 @@ class Column:
             container_surfaces    = [x for x in interstitial_surfaces if x not in particle_surfaces]
 
             self.surfaces.update({'particles': [x[1] for x in particle_surfaces]})
-            self.surfaces.update({'inlet'    : [container_surfaces[2][1]]})
-            self.surfaces.update({'outlet'   : [container_surfaces[1][1]]})
+
             self.surfaces.update({'walls'    : [container_surfaces[0][1]]})
 
+            ## Sorted to make the center ones first
+            self.surfaces.update({'inlet': sorted([ tag for _,tag in filter_surfaces_with_normal(container_surfaces, (0,0,-1)) ], reverse=True) })
+            self.surfaces.update({'outlet': sorted([ tag for _, tag in filter_surfaces_with_normal(container_surfaces, (0,0,1)) ], reverse=True) })
+
+            print(self.surfaces)
+
+
+    def get_inlet_outlet_wires(self, N, type='EQUIDISTANT'):
+        """
+        In cases where I need to apply inlet/outlet conditions to only parts of the surface, divide the surface into concentric rings
+        """
+        factory = gmsh.model.occ
+        inlet_wires = []
+        outlet_wires = []
+        if self.container_shape == "cylinder":
+            if N > 1:
+                x = self.container.size[0]
+                y = self.container.size[1]
+                z = self.container.size[2]
+                dz = self.container.size[5]
+                R = self.container.size[6]
+                if type == 'EQUIDISTANT': 
+                    self.logger.note(f"Using {N} equidistant cuts for inlet/outlet")
+                    cut_radii = [ R * ma.sqrt(n/N) for n in range(1,N) ]
+                elif type == 'EQUIVOLUME': 
+                    cut_radii = [ R * n/N for n in range(1,N) ]
+                else: 
+                    raise RuntimeError(f"Invalid face division type: {type}")
+                for r in cut_radii:
+                    inlet_wires.append(factory.addCircle(x,y,z,r))
+                    outlet_wires.append(factory.addCircle(x,y,z+dz,r))
+
+        return [ (1,tag) for tag in inlet_wires ], [ (1,tag) for tag in outlet_wires ]
 
     def match_periodic_surfaces(self, sLeft, sRight, perDir, distance):
         """
@@ -222,20 +258,35 @@ class Column:
                 if np.allclose(bboxm_masked, bboxp_masked):
                     gmsh.model.mesh.setPeriodic(2, [sp], [sm], affineTranslation)
 
+    def set_individual_physical_groups(self, tags, name_prefix, index_offset=1):
+        """Set physical groups and names for a list of tags"""
+        for index,tag in enumerate(tags):
+            gmsh.model.addPhysicalGroup(2, [tag], index_offset + index)
+            gmsh.model.setPhysicalName(2, index_offset + index, name_prefix + str(index))
+
     def set_physical_groups(self):
         self.logger.out('Setting physical groups')
 
         gmsh.model.removePhysicalGroups()
 
-        gmsh.model.addPhysicalGroup(2, self.surfaces.get('inlet'), 1)
-        gmsh.model.addPhysicalGroup(2, self.surfaces.get('outlet'), 2)
+        if len(self.surfaces.get('inlet', [])) > 1: 
+            self.logger.note('Inlet/Outlet face group indices are offset by 10 and 20 respectively')
+            inlet_tags = self.surfaces.get('inlet', [])
+            outlet_tags = self.surfaces.get('outlet', [])
+            self.set_individual_physical_groups(inlet_tags, 'inlet', 10)
+            self.set_individual_physical_groups(outlet_tags, 'outlet', 20)
+        else:
+            gmsh.model.addPhysicalGroup(2, self.surfaces.get('inlet'), 1)
+            gmsh.model.addPhysicalGroup(2, self.surfaces.get('outlet'), 2)
+            gmsh.model.setPhysicalName(2, 1, "inlet")
+            gmsh.model.setPhysicalName(2, 2, "outlet")
+
         gmsh.model.addPhysicalGroup(2, self.surfaces.get('walls'), 3)
         gmsh.model.addPhysicalGroup(2, self.surfaces.get('particles'), 4)
         gmsh.model.addPhysicalGroup(3, self.volumes.get('interstitial'), 5)
         gmsh.model.addPhysicalGroup(3, self.volumes.get('particles'), 6)
 
-        gmsh.model.setPhysicalName(2, 1, "inlet")
-        gmsh.model.setPhysicalName(2, 2, "outlet")
+
         gmsh.model.setPhysicalName(2, 3, "walls")
         gmsh.model.setPhysicalName(2, 4, "particles")
         gmsh.model.setPhysicalName(3, 5, "interstitial")
@@ -290,3 +341,11 @@ class Column:
 
         gmsh.model.removePhysicalGroups()
 
+        inlet_tags = self.surfaces.get('inlet', [])
+        outlet_tags = self.surfaces.get('outlet', [])
+        self.set_individual_physical_groups(inlet_tags, 'inlet', 110)
+        self.set_individual_physical_groups(outlet_tags, 'outlet', 120)
+
+        gmsh.write(basename + '_inlet_outlet_individual' + extension)
+
+        gmsh.model.removePhysicalGroups()
