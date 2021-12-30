@@ -1,0 +1,41 @@
+packedbed:
+  packing_file:
+    filename: packing.xyzd
+    dataformat: <d
+  nbeads: 4
+  scaling_factor: 1.0
+  # auto_translate: True
+  particles:
+    scaling_factor: 0.9997
+    # modification: bridge | cut 
+    # relative_bridge_radius: ...
+container:
+  shape: box
+  size: [ -0.5, -0.5, -0.5, 1.0, 1.0, 4.0 ]
+  # size: [-2, -2, 0, 4, 4, 4]
+  # periodicity: 
+  # linked: True
+  # stack_method: planecut
+  # inlet_length: 0.0
+  # outlet_length: 0.0
+mesh:
+  # size: 0.15
+  size_method: field
+  field:
+    threshold:
+      size_in: 0.06
+      size_out: 0.14
+      rad_min_factor: 0.4
+      rad_max_factor: 0.6
+  algorithm: 5
+  algorithm3D: 10
+  generate: 2
+output:
+  filename: mesh.vtk
+gmsh:
+  General.Verbosity: 5
+  Geometry.OCCParallel: 1
+  Mesh.MaxNumThreads1D: 8
+  Mesh.MaxNumThreads2D: 8
+  Mesh.MaxNumThreads3D: 8
+  Mesh.ScalingFactor: 0.0001

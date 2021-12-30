@@ -1,0 +1,13 @@
+packing:
+  file:
+    name: packing.xyzd
+    dataformat: <d
+  nbeads: 1
+  scaling_factor: 1
+  particles:
+    scaling_factor: 0.9997
+container:
+  shape: box
+  size: [-0.6, -0.6, -1, 1.2, 1.2, 2]
+output:
+  filename: mesh.vtk

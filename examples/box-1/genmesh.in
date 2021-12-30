@@ -1,0 +1,31 @@
+# dryRun 1
+
+## Packing
+packing	packing.xyzd
+packingPrecision	8
+translateOffsets	0 0 0
+preScalingFactor	1
+
+## Bead selection range
+nBeads	1
+
+## Bead modifications
+reduced	0.9997
+
+## Container Geometry
+autoContainment	1 
+containerShape	1 
+inlet	1.5
+outlet	1.5
+rCylDelta	0.01
+
+## Mesh size
+lc_beads	0.10
+lc_out	0.10
+lc_bridge	0.10
+
+## GMSH settings
+Mesh.ScalingFactor 0.0001
+Mesh.Generate 3
+Mesh.Algorithm 5
+Mesh.Algorithm3D 10
