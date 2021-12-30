@@ -65,22 +65,31 @@ gmsh:
 # Notes
 - For `shape: cyl`, `size: [x, y, z, dx, dy, dz, r]`
 - For `shape: box`, `size: [x, y, z, dx, dy, dz]`
+- If `mesh.field.threshold.size_in` and `mesh.field.threshold.size_out` are not given, they default to `mesh.size`
 
 # Features roadmap
-- [PART] cylinder container shape
-- [NEXT] bridges, cuts
+- [DONE] Timestamp in log filenames
+- [DONE] cylinder container shape
 - [TASK] porosity manipulation by bead addition/deletion
+- [TASK] Documentation
+- [NEXT] bridges, cuts
+- [TASK] Auto container sizing? 
 - [TASK] Move to numpy arrays?
 - [TASK] check out numba njit
 - [TASK] Parallelize
 - [TASK] Profile stack_all
 - [TASK] Debug mode
-- [DONE] Timestamp in log filenames
 - [TASK] Add JSON support
 - [TASK] Consider ruamel_yaml
 - [TASK] Geometry save and load: stashed
 - [TASK] Improve memory usage
     - separate_bounding_surfaces()
+- [TASK] Print out information about the column: 
+    - length or bed and column
+    - porosity of bed and column
+    - Particle volumes
+    - Particle size distribution: mean
+- [TASK] Expose end_face_sections_type
 
 # Known issues:
 - [CRIT] setting gmsh.General.NumThreads generates degenerate element surfaces. It's a gmsh issue.
