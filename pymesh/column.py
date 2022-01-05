@@ -205,9 +205,9 @@ class Column:
                 R = self.container.size[6]
                 if type == 'EQUIDISTANT': 
                     self.logger.note(f"Using {N} equidistant cuts for inlet/outlet")
-                    cut_radii = [ R * ma.sqrt(n/N) for n in range(1,N) ]
-                elif type == 'EQUIVOLUME': 
                     cut_radii = [ R * n/N for n in range(1,N) ]
+                elif type == 'EQUIVOLUME': 
+                    cut_radii = [ R * ma.sqrt(n/N) for n in range(1,N) ]
                 else: 
                     raise RuntimeError(f"Invalid face division type: {type}")
                 for r in cut_radii:
