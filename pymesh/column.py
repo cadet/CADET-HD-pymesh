@@ -186,9 +186,6 @@ class Column:
             self.surfaces.update({'inlet': sorted([ tag for _,tag in filter_surfaces_with_normal(container_surfaces, (0,0,-1)) ], reverse=True) })
             self.surfaces.update({'outlet': sorted([ tag for _, tag in filter_surfaces_with_normal(container_surfaces, (0,0,1)) ], reverse=True) })
 
-            print(self.surfaces)
-
-
     def get_inlet_outlet_wires(self, N, type='EQUIDISTANT'):
         """
         In cases where I need to apply inlet/outlet conditions to only parts of the surface, divide the surface into concentric rings
