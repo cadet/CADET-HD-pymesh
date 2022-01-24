@@ -3,3 +3,8 @@ __pycache__/
 *.log
 *.msh*
 *.brep
+*.txt
+*.csv
+beads_used.xyzd
+*.pvtu
+*.vtu
