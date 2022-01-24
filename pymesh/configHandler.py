@@ -102,8 +102,7 @@ class ConfigHandler:
         self.output_filename                     = self.get('output.filename', 'output.vtk', str())
         self.output_log_timestamp                = self.get('output.log_timestamp', False, bool)
 
-        self.gmsh_meta_improved_bbox_calc        = self.get('gmsh_meta.improved_bbox_calc', False)
-
+        self.general_improved_bbox_calc          = self.get('general.improved_bbox_calc', False)
         self.general_fragment                    = self.get('general.fragment', True, bool)
 
     def set_gmsh_defaults(self):
@@ -128,7 +127,7 @@ class ConfigHandler:
         for option,value in gmsh_conf.items():
             gmsh.option.setNumber(option, value)
 
-        if self.gmsh_meta_improved_bbox_calc: 
+        if self.general_improved_bbox_calc: 
             gmsh.option.setNumber("Geometry.OCCBoundsUseStl"  , 1)
             gmsh.option.setNumber("Mesh.StlAngularDeflection" , 0.08 )
             gmsh.option.setNumber("Mesh.StlLinearDeflection"  , 0.0005)

@@ -38,8 +38,6 @@ output:
   generic: True
   particles: True
 gmsh:
-gmsh_meta: 
-  improved_bbox_calc: False
 general: 
-  dryrun: False 
   fragment: True
+  improved_bbox_calc: False
