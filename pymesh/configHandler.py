@@ -102,6 +102,8 @@ class ConfigHandler:
         self.output_filename                     = self.get('output.filename', 'output.vtk', str())
         self.output_log_timestamp                = self.get('output.log_timestamp', False, bool)
 
+        self.gmsh_meta_improved_bbox_calc        = self.get('gmsh_meta.improved_bbox_calc', False)
+
     def set_gmsh_defaults(self):
 
         gmsh.option.setNumber('General.Terminal', 1)
@@ -111,18 +113,23 @@ class ConfigHandler:
         # 1: Delaunay | 4: Frontal | 5: Frontal Delaunay | 6: Frontal Hex | 7: MMG3D | 9: RTree | 10: HXT
         gmsh.option.setNumber("Mesh.Algorithm3D", self.get('mesh.algorithm3D', 10)) # Default = 1
 
-        if int(gmsh.GMSH_API_VERSION_MAJOR) == 4:
-            if int(gmsh.GMSH_API_VERSION_MINOR) >= 9:
-                ## Improved bounding box calculations,can slow things down
-                gmsh.option.setNumber("Geometry.OCCBoundsUseStl"  , 1)
-                gmsh.option.setNumber("Mesh.StlAngularDeflection" , 0.08 )
-                gmsh.option.setNumber("Mesh.StlLinearDeflection"  , 0.0005)
+        # if int(gmsh.GMSH_API_VERSION_MAJOR) == 4:
+        #     if int(gmsh.GMSH_API_VERSION_MINOR) >= 9:
+        #         ## Improved bounding box calculations,can slow things down
+        #         gmsh.option.setNumber("Geometry.OCCBoundsUseStl"  , 1)
+        #         gmsh.option.setNumber("Mesh.StlAngularDeflection" , 0.08 )
+        #         gmsh.option.setNumber("Mesh.StlLinearDeflection"  , 0.0005)
 
     def set_gmsh_options(self):
         gmsh_conf = self.get('gmsh', {})
 
         for option,value in gmsh_conf.items():
             gmsh.option.setNumber(option, value)
+
+        if self.gmsh_meta_improved_bbox_calc: 
+            gmsh.option.setNumber("Geometry.OCCBoundsUseStl"  , 1)
+            gmsh.option.setNumber("Mesh.StlAngularDeflection" , 0.08 )
+            gmsh.option.setNumber("Mesh.StlLinearDeflection"  , 0.0005)
 
 
 class ConfigError(Exception):
