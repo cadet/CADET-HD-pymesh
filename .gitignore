@@ -8,3 +8,6 @@ __pycache__/
 beads_used.xyzd
 *.pvtu
 *.vtu
+*.pyc
+build/
+*.egg-info/
