@@ -60,12 +60,17 @@ gmsh:
   Mesh.MaxNumThreads2D: 8
   Mesh.MaxNumThreads3D: 8
   Mesh.ScalingFactor: 0.0001
+general:
+  fragment: True
 ```
 
 # Notes
 - For `shape: cyl`, `size: [x, y, z, dx, dy, dz, r]`
 - For `shape: box`, `size: [x, y, z, dx, dy, dz]`
 - If `mesh.field.threshold.size_in` and `mesh.field.threshold.size_out` are not given, they default to `mesh.size`
+- Set `general.fragment` to `False` to run a quick mesh and manual visual check for correct dimensions and intersecting volumes.
+    - Best with `mesh.generate` set to `2`
+    - Be aware that this breaks physical groups, matching periodic surfaces etc
 
 # Features roadmap
 - [DONE] Timestamp in log filenames
@@ -105,6 +110,9 @@ gmsh:
         - Mesh.StlAngularDeflection: 0.08
         - Mesh.StlLinearDeflection: 0.0005
     - It also seems to be mesh size dependent(???)
+- Weird segfaulting with General.NumThreads on IBT012.
+    - Crashes at 20%ish of 1D meshing on _some_ values of General.NumThreads
+    - For Delaunay + HXT algos
     
 https://gitlab.onelab.info/gmsh/gmsh/-/issues/1246
 https://gitlab.onelab.info/gmsh/gmsh/-/issues/1061

@@ -104,6 +104,8 @@ class ConfigHandler:
 
         self.gmsh_meta_improved_bbox_calc        = self.get('gmsh_meta.improved_bbox_calc', False)
 
+        self.general_fragment                    = self.get('general.fragment', True, bool)
+
     def set_gmsh_defaults(self):
 
         gmsh.option.setNumber('General.Terminal', 1)

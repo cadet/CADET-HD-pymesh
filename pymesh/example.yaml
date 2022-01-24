@@ -27,7 +27,7 @@ mesh:
     threshold:
       rad_min_factor: 0.5
       rad_max_factor: 0.5
-  reference_particle_radius: 'avg' or 'max' or 'min' or number
+  reference_particle_radius: 'avg'
   algorithm: 5
   algorithm3D: 10
   generate: 3
@@ -38,6 +38,8 @@ output:
   generic: True
   particles: True
 gmsh:
+gmsh_meta: 
+  improved_bbox_calc: False
 general: 
   dryrun: False 
-
+  fragment: True

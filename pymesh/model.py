@@ -39,7 +39,6 @@ class Model:
         self.mesh_size_method      = config.mesh_size_method
         self.mesh_generate         = config.mesh_generate
 
-
         self.packedBed = PackedBed(config)
 
         if not config.container_shape:
@@ -82,7 +81,7 @@ class Model:
 
             self.logger.out('Creating inlet column section')
             inlet_container = Container('box', inlet_size)
-            self.inlet = Column(inlet_container, self.packedBed, copy=True, periodicity=inout_periodicity)
+            self.inlet = Column(inlet_container, self.packedBed, fragment=config.general_fragment, copy=True, periodicity=inout_periodicity)
 
             outlet_size = [
                self.container_size[0],
@@ -94,10 +93,10 @@ class Model:
                ]
             self.logger.out('Creating outlet column section')
             outlet_container = Container('box', outlet_size)
-            self.outlet = Column(outlet_container, self.packedBed, copy=True, periodicity=inout_periodicity)
+            self.outlet = Column(outlet_container, self.packedBed, fragment=config.general_fragment, copy=True, periodicity=inout_periodicity)
 
         self.logger.out('Creating central column section')
-        self.column = Column(column_container, self.packedBed, copy=False, periodicity=column_periodicity, endFaceSections=config.container_end_face_sections)
+        self.column = Column(column_container, self.packedBed, fragment=config.general_fragment, copy=False, periodicity=column_periodicity, endFaceSections=config.container_end_face_sections)
 
     def set_mesh_size(self):
         self.logger.out("Setting mesh size")
