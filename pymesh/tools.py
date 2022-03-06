@@ -141,3 +141,17 @@ def remove_all_except(entities):
             factory.remove(factory.getEntities(1))
             factory.remove(factory.getEntities(0))
 
+
+def remove_physical_groups(): 
+    """
+    Needed because for some reason, removing physical groups doesn't remove physical names
+    """
+    model = gmsh.model
+    groups = model.getPhysicalGroups()
+    names = [ model.getPhysicalName(x[0], x[1]) for x in groups] 
+
+    for name in names:
+        model.removePhysicalName(name)
+
+    model.removePhysicalGroups()
+
