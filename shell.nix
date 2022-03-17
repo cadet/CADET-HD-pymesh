@@ -1,5 +1,16 @@
 let
   pkgs = import <nixpkgs> {};
+
+  ## GMSH override to build and install lib files
+  ## Can also be placed in ~/.nixpkgs/config.nix
+  gmsh_with_libs = pkgs.gmsh.overrideAttrs (oldAttrs: rec {
+            cmakeFlags = [
+            "-DENABLE_BUILD_LIB=1"
+            "-DENABLE_BUILD_SHARED=1"
+            "-DENABLE_BUILD_DYNAMIC=1"
+            ];
+            });
+
 in pkgs.mkShell rec {
     name = "pymesh";
 
@@ -9,16 +20,6 @@ in pkgs.mkShell rec {
 
         src = ./.;
 
-        # ## GMSH override to build and install lib files
-        # ## Can also be placed in ~/.nixpkgs/config.nix
-        # gmsh = pkgs.gmsh.overrideAttrs (oldAttrs: rec {
-        #         cmakeFlags = [
-        #         "-DENABLE_BUILD_LIB=1"
-        #         "-DENABLE_BUILD_SHARED=1"
-        #         "-DENABLE_BUILD_DYNAMIC=1"
-        #         ];
-        #         });
-
         propagatedBuildInputs = with pkgs; [
                 python39
                 python3Packages.numpy
@@ -26,7 +27,7 @@ in pkgs.mkShell rec {
                 python3Packages.ruamel-yaml
                 python3Packages.GitPython
                 python3Packages.setuptools
-                gmsh
+                gmsh_with_libs
             ];
 
         doCheck = false;
@@ -41,7 +42,7 @@ in pkgs.mkShell rec {
     # See https://pip.pypa.io/en/stable/user_guide/#environment-variables.
     export PIP_PREFIX=$(pwd)/_build/pip_packages
     export PYTHONPATH="$PIP_PREFIX/${pkgs.python3.sitePackages}:$PYTHONPATH"
-    export PYTHONPATH="${pkgs.gmsh}/lib:$PYTHONPATH"
+    export PYTHONPATH="${gmsh_with_libs}/lib:$PYTHONPATH"
     export PATH="$PIP_PREFIX/bin:$PATH"
     unset SOURCE_DATE_EPOCH
   '';
