@@ -70,6 +70,8 @@ class PackedBed:
                 r = chunk[3]/2 * self.scaling_factor * self.particles_scaling_factor
                 self.beads.append(Bead(x, y, z, r))
 
+        self.logger.out(f"Found {len(self.beads)} beads")
+
 
     @property
     def dimTags(self):
