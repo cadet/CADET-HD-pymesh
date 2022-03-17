@@ -1,6 +1,21 @@
-let
-  pkgs = import <nixpkgs> {};
+# { pkgs ? import <nixpkgs> { } }:
+{
+    pkgs ? import (builtins.fetchTarball {
 
+      # Descriptive name to make the store path easier to identify
+      name = "nixpkgs-unstable-2022-03-17";
+
+      # Commit hash for nixos-unstable as of 2018-09-12
+      url = "https://github.com/nixos/nixpkgs/archive/3eb07eeafb52bcbf02ce800f032f18d666a9498d.tar.gz";
+
+      # Hash obtained using `nix-prefetch-url --unpack <url>`
+      sha256 = "1ah1fvll0z3w5ykzc6pabqr7mpbnbl1i3vhmns6k67a4y7w0ihrr";
+    
+    }) {}
+
+}:
+
+let
   ## GMSH override to build and install lib files
   ## Can also be placed in ~/.nixpkgs/config.nix
   gmsh_with_libs = pkgs.gmsh.overrideAttrs (oldAttrs: rec {
