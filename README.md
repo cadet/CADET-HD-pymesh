@@ -13,6 +13,8 @@ If gmsh is built from source, ensure that
     - `PYTHONPATH` points to `$GMSH_ROOT/lib` (or wherever the gmsh.py file is)
     - `LD_LIBRARY_PATH` points to `$GMSH_ROOT/lib` (or wherever the gmsh{.so,.a} files are)
 
+NOTE: I use some weird `git_version()` function in `setup.py`. You might wanna change that.
+
 # Usage
 
 The script in `bin/` should be available in `$PATH` after the install. It is currently called `mesh`. Given the appropriate input file in yaml format, run: `mesh input.yaml`
@@ -78,7 +80,7 @@ general:
 - [TASK] porosity manipulation by bead addition/deletion
 - [TASK] Documentation
 - [NEXT] bridges, cuts
-- [TASK] Auto container sizing? 
+- [TASK] Auto container sizing?
 - [TASK] Move to numpy arrays?
 - [TASK] check out numba njit
 - [TASK] Parallelize
@@ -94,7 +96,6 @@ general:
     - porosity of bed and column
     - Particle volumes
     - Particle size distribution: mean
-- [TASK] Expose end_face_sections_type
 
 # Known issues:
 - [CRIT] setting gmsh.General.NumThreads generates degenerate element surfaces. It's a gmsh issue.
@@ -111,8 +112,15 @@ general:
         - Mesh.StlLinearDeflection: 0.0005
     - It also seems to be mesh size dependent(???)
 - Weird segfaulting with General.NumThreads on IBT012.
-    - Crashes at 20%ish of 1D meshing on _some_ values of General.NumThreads
+    - Crashes at random parts of meshing on _some_ values of General.NumThreads
     - For Delaunay + HXT algos
+    - https://nielscautaerts.xyz/debugging-python-in-neovim.html
+    - https://stackoverflow.com/questions/10035541/what-causes-a-python-segmentation-fault
+    - https://gitlab.onelab.info/gmsh/gmsh/-/issues/1807
+    - `munmap_chunk(): invalid pointer`
+    - corrupted double-linked list
+    - General.Verbosity = 3,4 makes it segfault
+
     
 https://gitlab.onelab.info/gmsh/gmsh/-/issues/1246
 https://gitlab.onelab.info/gmsh/gmsh/-/issues/1061
