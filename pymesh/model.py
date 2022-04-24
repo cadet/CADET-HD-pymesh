@@ -116,8 +116,9 @@ class Model:
         basename = Path(self.fname).stem
         extension = Path(self.fname).suffix
 
-        self.logger.out("Writing full mesh")
-        gmsh.write(self.fname)
+        # # This is almost never used in practice
+        # self.logger.out("Writing full mesh")
+        # gmsh.write(self.fname)
 
         if not self.container_shape:
             return
