@@ -100,6 +100,7 @@ class ConfigHandler:
         self.mesh_generate                       = self.get('mesh.generate', 3, int, [0,1,2,3])
 
         self.output_filename                     = self.get('output.filename', 'output.vtk', str())
+        self.output_fragment_format              = self.get('output.fragment_format', 'vtk', str())
         self.output_log_timestamp                = self.get('output.log_timestamp', False, bool)
 
         self.general_improved_bbox_calc          = self.get('general.improved_bbox_calc', False)

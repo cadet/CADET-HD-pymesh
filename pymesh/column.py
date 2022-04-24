@@ -14,6 +14,8 @@ from pymesh.tools import get_surface_normals, filter_surfaces_with_normal, testM
 from pymesh.tools import remove_physical_groups
 from pymesh.log import Logger
 
+from pathlib import Path
+
 import numpy as np
 import numpy.ma as ma
 
@@ -293,18 +295,16 @@ class Column:
         gmsh.model.setPhysicalName(3, 5, "interstitial")
         gmsh.model.setPhysicalName(3, 6, "particles")
 
-    def write(self, fname, writeFragments=True):
+    def write(self, fname, writeFragments=True, fragmentFormat='.vtk'):
         self.set_physical_groups()
         gmsh.write(fname)
 
         if writeFragments:
-            self.write_fragments(fname)
+            basename = Path(fname).stem
+            extension = Path(fname).suffix
+            self.write_fragments(basename, fragmentFormat)
 
-    def write_fragments(self, fname):
-        from pathlib import Path
-
-        basename = Path(fname).stem
-        extension = Path(fname).suffix
+    def write_fragments(self, basename, extension):
 
         remove_physical_groups()
 

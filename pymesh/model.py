@@ -39,6 +39,8 @@ class Model:
         self.mesh_size_method      = config.mesh_size_method
         self.mesh_generate         = config.mesh_generate
 
+        self.fragment_format       = config.output_fragment_format if config.output_fragment_format[0] == '.' else f".{config.output_fragment_format}"
+
         self.packedBed = PackedBed(config)
 
         if not config.container_shape:
@@ -123,9 +125,9 @@ class Model:
         if not self.container_shape:
             return
 
-        self.column.write(basename + '_column' + extension)
+        self.column.write(basename + '_column' + extension, fragmentFormat=self.fragment_format)
 
         if self.container_linked :
-            self.inlet.write(basename + '_inlet' + extension)
-            self.outlet.write(basename + '_outlet' + extension)
+            self.inlet.write(basename + '_inlet' + extension, fragmentFormat=self.fragment_format)
+            self.outlet.write(basename + '_outlet' + extension, fragmentFormat=self.fragment_format)
 
