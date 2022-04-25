@@ -120,6 +120,7 @@ general:
     - `munmap_chunk(): invalid pointer`
     - corrupted double-linked list
     - General.Verbosity = 3,4 makes it segfault
+    - python3.9: malloc.c:2542: sysmalloc: Assertion `(old_top == initial_top (av) && old_size == 0) || ((unsigned long) (old_size) >= MINSIZE && prev_inuse (old_top) && ((unsigned long) old_end & (pagesize - 1)) == 0)' failed.
 
     
 https://gitlab.onelab.info/gmsh/gmsh/-/issues/1246
