@@ -127,19 +127,20 @@ def testMesh(fname, size=0.2, dim=3):
     gmsh.write(fname)
 
 def remove_all_except(entities):
-    factory = gmsh.model.occ
+    gmsh.model.occ.synchronize()
+    gmsh.model.geo.synchronize()
     print(entities)
     dims = [ dim for dim,_ in entities ]
     ## If all dims are same
     if dims.count(dims[0]) == len(dims):
         if dims[0] == 3:
-            all = factory.getEntities(dim=3)
-            factory.remove([e for e in all if e not in entities], recursive=True)
+            all = gmsh.model.getEntities(dim=3)
+            gmsh.model.removeEntities([e for e in all if e not in entities], recursive=True)
         elif dims[0] == 2:
-            factory.remove(factory.getEntities(dim=3))
-            factory.remove([e for e in factory.getEntities(dim=2) if e not in entities], recursive=True)
-            factory.remove(factory.getEntities(1))
-            factory.remove(factory.getEntities(0))
+            gmsh.model.removeEntities(gmsh.model.getEntities(dim=3))
+            gmsh.model.removeEntities([e for e in gmsh.model.getEntities(dim=2) if e not in entities], recursive=True)
+    gmsh.model.occ.synchronize()
+    gmsh.model.geo.synchronize()
 
 
 def remove_physical_groups(): 
