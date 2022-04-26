@@ -395,17 +395,16 @@ class PackedBed:
         self.generate()
 
     def copy_mesh(self, nodeTagsOffset, elementTagsOffset): 
+        """
+        Generate a reference sphere volume mesh and copy it to create a full packed bed.
+
+        """
         current_model = gmsh.model.getCurrent()
 
         gmsh.model.add("reference")
         gmsh.model.occ.addSphere(0, 0, 0, 1)
 
         self.set_threshold_for_reference_mesh()
-
-        # gmsh.model.occ.synchronize()
-        #
-        # points = gmsh.model.getBoundary(self.dimTags, combined=False, oriented=False, recursive=True)
-        # gmsh.model.mesh.setSize(points, 0.10)
 
         gmsh.model.mesh.generate(3)
         m, _, _ = store_mesh(3)
@@ -428,6 +427,10 @@ class PackedBed:
         return ntoff, etoff
 
     def set_threshold_for_reference_mesh(self): 
+        """
+        Set a point based threshold mesh field for the reference mesh 
+        Implementation is copied from set_mesh_fields() to keep some backward compat
+        """
 
         factory = gmsh.model.occ
         field = gmsh.model.mesh.field
