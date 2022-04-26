@@ -182,6 +182,15 @@ class PackedBed:
             field.setNumber(ttag, "DistMin", distmin);
             field.setNumber(ttag, "DistMax", distmax);
 
+        ## WARNING: The mesh size for SizeMax is not scaled because of the backgroundField issue.
+        # Since we have multiple overlapping threshold fields reaching out to
+        # infinity, setting a background in both cases of size_in > size_out
+        # and size_in < size_out is not easy. 
+        # For a finer particle interior, backgroundField == Min
+        # For a coarser particle interior, we would have to set backgroundField to Max.
+        # This changes things on the particle surface. If we scale the mesh size outside with the bead radius, the max field will set the mesh size of the largest particle on the surface of the smallest.
+
+
         ## Set background field
         backgroundField = 'Min' if self.mesh_field_threshold_size_in <= self.mesh_field_threshold_size_out else 'Max'
         bftag = field.add(backgroundField);
