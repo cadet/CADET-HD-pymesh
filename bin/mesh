@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from pymesh import ConfigHandler, Logger, Model, __version__
+from pymesh import CopyMeshModel
 
 import argparse
 import gmsh
@@ -36,7 +37,12 @@ def pymesh():
         config.set_gmsh_defaults()
         config.set_gmsh_options()
 
-        defaultModel = Model(config)
+        if config.get('mesh.method') == 'generic': 
+            defaultModel = Model(config)
+        elif config.get('mesh.method') == 'copymesh':  
+            defaultModel = CopyMeshModel(config)
+        else: 
+            logger.die(f"Invalid mesh.method: {config.get('mesh.method')}")
 
         defaultModel.mesh()
         defaultModel.write()

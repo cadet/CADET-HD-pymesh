@@ -9,7 +9,7 @@ contract:
 
 """
 
-from pymesh.tools import bin_to_arr, grouper, get_surface_normals, get_volume_normals
+from pymesh.tools import bin_to_arr, grouper, get_surface_normals, get_volume_normals, store_mesh
 from pymesh.bead import Bead
 from pymesh.log import Logger
 
@@ -21,7 +21,7 @@ from itertools import combinations
 
 class PackedBed:
 
-    def __init__(self, config, logger=Logger(level=2)):
+    def __init__(self, config, generate=True, logger=Logger(level=2)):
 
         self.logger = logger
 
@@ -44,7 +44,8 @@ class PackedBed:
         self.read_packing()
         if self.auto_translate:
             self.moveBedtoCenter()
-        self.generate()
+        if generate: 
+            self.generate()
 
         # print(*[bead for bead in self.beads], sep='\n')
 
@@ -383,3 +384,138 @@ class PackedBed:
 
         self.beads.extend(stacked_beads)
         self.generate()
+
+    def copy_mesh(self, nodeTagsOffset, elementTagsOffset): 
+        current_model = gmsh.model.getCurrent()
+
+        gmsh.model.add("reference")
+        gmsh.model.occ.addSphere(0, 0, 0, 1)
+
+        self.set_threshold_for_reference_mesh()
+
+        # gmsh.model.occ.synchronize()
+        #
+        # points = gmsh.model.getBoundary(self.dimTags, combined=False, oriented=False, recursive=True)
+        # gmsh.model.mesh.setSize(points, 0.10)
+
+        gmsh.model.mesh.generate(3)
+        m, _, _ = store_mesh(3)
+
+        gmsh.model.setCurrent(current_model)
+
+        ntoff = nodeTagsOffset
+        etoff = elementTagsOffset
+
+        for bead in self.beads:
+            ntoff, etoff = bead.copy_mesh(m, ntoff, etoff)
+
+        gmsh.model.setCurrent('reference')
+        gmsh.model.remove()
+
+        gmsh.model.setCurrent(current_model)
+        gmsh.model.geo.synchronize()
+
+        # gmsh.write('test.vtk')
+        return ntoff, etoff
+
+    def set_threshold_for_reference_mesh(self): 
+
+        factory = gmsh.model.occ
+        field = gmsh.model.mesh.field
+
+        factory.synchronize()
+
+        self.updateBounds()
+        if self.mesh_ref_radius == 'avg':
+            self.rref = self.ravg
+        elif self.mesh_ref_radius == 'max':
+            self.rref = self.rmax
+        elif self.mesh_ref_radius == 'min':
+            self.rref = self.rmin
+
+        ## Tags of distance and threshold fields
+        dtags = []
+        ttags = []
+
+        ## Create points as an anchor for the distance fields
+
+        bead_size_ratio = 1.0/self.rref
+
+        ctag = factory.addPoint(0.0, 0.0, 0.0, self.mesh_field_threshold_size_in* bead_size_ratio)
+
+        factory.synchronize()
+
+        bead_size_ratio = 1.0/self.rref
+
+        dtag = field.add('Distance')
+        dtags.append(dtag)
+        field.setNumbers(dtag, 'PointsList', [ctag])
+        ## TODO
+        # field.setNumbers(dtag, 'SurfacesList', [dtag])
+
+        distmin = self.mesh_field_threshold_rad_min_factor * 1.0
+        distmax = self.mesh_field_threshold_rad_max_factor * 1.0
+
+        ttag = field.add('Threshold')
+        ttags.append(ttag)
+        field.setNumber(ttag, "InField", dtag);
+        field.setNumber(ttag, "SizeMin", self.mesh_field_threshold_size_in * bead_size_ratio);
+        field.setNumber(ttag, "SizeMax", self.mesh_field_threshold_size_out * bead_size_ratio);
+        field.setNumber(ttag, "DistMin", distmin);
+        field.setNumber(ttag, "DistMax", distmax);
+
+        ## Set background field
+        backgroundField = 'Min' if self.mesh_field_threshold_size_in <= self.mesh_field_threshold_size_out else 'Max'
+        bftag = field.add(backgroundField);
+        field.setNumbers(bftag, "FieldsList", ttags);
+        field.setAsBackgroundMesh(bftag);
+
+        gmsh.option.setNumber("Mesh.MeshSizeExtendFromBoundary", 0)
+        # gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
+        # gmsh.option.setNumber("Mesh.MeshSizeFromCurvature", 0)
+
+        factory.synchronize()
+
+    # def set_mesh_fields_from_surfaces(self, surfaceTags):
+    #
+    #     factory = gmsh.model.occ
+    #     field = gmsh.model.mesh.field
+    #
+    #     factory.synchronize()
+    #
+    #     ## Tags of distance and threshold fields
+    #     dtags = []
+    #     ttags = []
+    #
+    #     
+    #     # s = gmsh.model.getEntities(2)
+    #
+    #     dtag = field.add('Distance')
+    #     dtags.append(dtag)
+    #     # field.setNumbers(dtag, 'PointsList', [ctag])
+    #     ## TODO
+    #     field.setNumbers(dtag, 'SurfacesList', [s[1] for s in surfaceTags ])
+    #
+    #     # distmin = self.mesh_field_threshold_rad_min_factor * 1.0
+    #     # distmax = self.mesh_field_threshold_rad_max_factor * 1.0
+    #
+    #     distmin = 0.5
+    #     distmax = 1.0
+    #
+    #     ttag = field.add('Threshold')
+    #     ttags.append(ttag)
+    #     field.setNumber(ttag, "InField", dtag);
+    #     field.setNumber(ttag, "SizeMin", 0.08);
+    #     field.setNumber(ttag, "SizeMax", 0.08);
+    #     field.setNumber(ttag, "DistMin", distmin);
+    #     field.setNumber(ttag, "DistMax", distmax);
+    #
+    #     ## Set background field
+    #     # backgroundField = 'Min' if self.mesh_field_threshold_size_in <= self.mesh_field_threshold_size_out else 'Max'
+    #
+    #     backgroundField = 'Min' 
+    #     bftag = field.add(backgroundField);
+    #     field.setNumbers(bftag, "FieldsList", ttags);
+    #     field.setAsBackgroundMesh(bftag);
+    #
+    #

@@ -16,4 +16,5 @@ from .bead          import Bead
 from .packedBed     import PackedBed
 from .container     import Container
 from .model         import Model
+from .newModel      import CopyMeshModel
 from .column        import Column

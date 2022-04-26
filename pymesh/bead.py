@@ -2,6 +2,8 @@ import gmsh
 import numpy as np
 from dataclasses import dataclass
 
+from pymesh.tools import copy_mesh
+
 @dataclass(init=True, order=True, repr=True, frozen=True)
 class Bead:
     """
@@ -23,6 +25,19 @@ class Bead:
     def generate(self):
         if self.tag == -1:
             object.__setattr__(self, 'tag', gmsh.model.occ.addSphere(self.x, self.y, self.z, self.r))
+
+    def copy_mesh(self, m, ntoff, etoff ):
+        ntoff, etoff= copy_mesh(
+                m, 
+                ntoff, etoff, 
+                xoff = self.x,
+                yoff = self.y,
+                zoff = self.z,
+                xscale = self.r,
+                yscale = self.r,
+                zscale = self.r,
+                )
+        return ntoff, etoff
 
     def pos_xy(self):
         return np.sqrt(self.x**2 + self.y**2)

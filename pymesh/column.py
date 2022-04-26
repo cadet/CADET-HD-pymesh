@@ -110,9 +110,23 @@ class Column:
         return self.entities
 
     def separate_volumes(self):
-        self.logger.out('Separating volumes')
+        self.logger.warn('Separating volumes assuming interstitial is last')
         self.volumes.update({'interstitial': [ self.entities[-1][1] ]})
         self.volumes.update({'particles': [ tag for _, tag in self.entities[:-1] ]})
+
+    def assign_bounding_surfaces(self): 
+        self.logger.warn('Hacking together bounding surfaces assuming cylinder is created last')
+
+        surfs = gmsh.model.getEntities(dim=2)
+
+        particle_surfaces = surfs[:-3]
+        container_surfaces = surfs[-3:]
+
+        # Get all but last 3 (cylinder surfaces)
+        self.surfaces.update({'particles': [x[1] for x in particle_surfaces]})
+        self.surfaces.update({'walls'    : [container_surfaces[0][1]]})
+        self.surfaces.update({'inlet': [container_surfaces[2][1]]})
+        self.surfaces.update({'outlet': [container_surfaces[1][1]]})
 
 
     def separate_bounding_surfaces(self):
