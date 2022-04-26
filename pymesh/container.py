@@ -65,7 +65,7 @@ class Container:
 
         s = gmsh.model.getEntities(2)
 
-        self.set_mesh_fields_from_surfaces(s, config)
+        self.set_mesh_fields_constant(s,config)
 
         gmsh.model.mesh.generate(2)
 
@@ -76,7 +76,7 @@ class Container:
         ntoff = nodeTagsOffset
         etoff = elementTagsOffset
 
-        ntoff, etoff = copy_mesh(m, ntoff, etoff)
+        ntoff, etoff = copy_mesh(m, ntoff, etoff, boundaries=True)
 
         gmsh.model.setCurrent('cylinder')
         gmsh.model.remove()
@@ -127,4 +127,26 @@ class Container:
         field.setNumbers(bftag, "FieldsList", ttags);
         field.setAsBackgroundMesh(bftag);
 
+
+    def set_mesh_fields_constant(self, surfaceTags, config):
+
+        field = gmsh.model.mesh.field
+        factory.synchronize()
+
+        ctags = []
+
+        ctag = field.add('Constant')
+        ctags.append(ctag)
+
+        sizeon = config.get('mesh.field.interstitial_surface_threshold.size_on', vartype=float)
+        sizeaway = config.get('mesh.field.interstitial_surface_threshold.size_away', vartype=float)
+
+        field.setNumbers(ctag, 'SurfacesList', [s[1] for s in surfaceTags ])
+        field.setNumber(ctag, 'VIn', sizeon)
+        field.setNumber(ctag, 'VOut', sizeaway)
+
+        backgroundField = 'Min' 
+        bftag = field.add(backgroundField);
+        field.setNumbers(bftag, "FieldsList", ctags);
+        field.setAsBackgroundMesh(bftag);
 

@@ -157,7 +157,7 @@ def remove_physical_groups():
     model.removePhysicalGroups()
 
 
-def copy_mesh(m, nodeTagsOffset, elemTagsOffset, xoff=0.0, yoff=0.0, zoff=0.0, xscale=1.0, yscale=1.0, zscale=1.0): 
+def copy_mesh(m, nodeTagsOffset, elemTagsOffset, xoff=0.0, yoff=0.0, zoff=0.0, xscale=1.0, yscale=1.0, zscale=1.0, boundaries=False): 
     for e in sorted(m):
         coords = np.array(m[e][1][1])
 
@@ -169,7 +169,15 @@ def copy_mesh(m, nodeTagsOffset, elemTagsOffset, xoff=0.0, yoff=0.0, zoff=0.0, x
         coords[1::3] += yoff
         coords[2::3] += zoff
 
-        tag = gmsh.model.addDiscreteEntity(e[0], -1, [b[1] for b in m[e][0]])
+        # Because beads are copied, relying on boundaries is not easy
+        # since boundaries do not get automatically moved, and we get wrongly
+        # matched volume boundaries
+        if boundaries: 
+            boundaries_tags = [b[1] for b in m[e][0]] 
+        else: 
+            boundaries_tags = []
+
+        tag = gmsh.model.addDiscreteEntity(e[0], -1, boundaries_tags)
         gmsh.model.mesh.addNodes(e[0], tag, 
                 [ nodeTagsOffset + t for t in m[e][1][0] ], 
                 coords.tolist()
