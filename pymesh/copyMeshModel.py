@@ -46,6 +46,9 @@ class CopyMeshModel:
         ntoff = 0
         etoff = 0
 
+        if config.container_shape == 'box': 
+            self.logger.die("Box containers not implemented with copymesh.")
+
         self.packedBed = PackedBed(config, generate=False)
         ntoff, etoff = self.packedBed.copy_mesh(ntoff, etoff)
 
