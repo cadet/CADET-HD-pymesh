@@ -11,30 +11,36 @@ packedbed:
     # relative_bridge_radius: ...
 container:
   shape: cylinder
-  size: [ 0.0, 0.0, -0.6, 0.0, 0.0, 4.2, 0.51 ]
+  size: [ 0.0, 0.0, -2, 0.0, 0.0, 7.5, 2.0 ]
   # size: [-2, -2, 0, 4, 4, 4]
   # periodicity: 
   # linked: True
   # stack_method: planecut
   # inlet_length: 0.0
   # outlet_length: 0.0
-  end_face_sections: 5
+  end_face_sections: 1
 mesh:
-  # size: 0.15
+  # size: 0.08
+  method: copymesh
   size_method: field
   field:
     threshold:
-      size_in: 0.06
-      size_out: 0.14
-      rad_min_factor: 0.4
-      rad_max_factor: 0.6
+      size_out: 0.08
+      size_in: 0.10
+      rad_min_factor: 0.8
+      rad_max_factor: 0.9
+    interstitial_surface_threshold:
+      size_on: 0.08
+      size_away: 0.14
+      dist_min: 0.5
+      dist_max: 0.5
   algorithm: 5
   algorithm3D: 10
   generate: 3
 output:
-  filename: mesh.msh2
+  filename: mesh.vtk
 gmsh:
-  General.Verbosity: 5
+  General.Verbosity: 99
   Geometry.OCCParallel: 1
   Mesh.MaxNumThreads1D: 8
   Mesh.MaxNumThreads2D: 8
