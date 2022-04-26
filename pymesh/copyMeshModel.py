@@ -53,7 +53,7 @@ class CopyMeshModel:
             return
 
         column_container = Container(self.container_shape, self.container_size, generate=False)
-        ntoff, etoff = column_container.copy_mesh(ntoff, etoff)
+        ntoff, etoff = column_container.copy_mesh(ntoff, etoff, config)
         # container_shell = column_container.generate_shell()
 
         self.logger.out('Creating central column section')

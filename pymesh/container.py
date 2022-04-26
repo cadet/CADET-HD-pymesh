@@ -56,7 +56,7 @@ class Container:
     def tags(self):
         return self.entities
 
-    def copy_mesh(self, nodeTagsOffset, elementTagsOffset): 
+    def copy_mesh(self, nodeTagsOffset, elementTagsOffset, config): 
         current_model = gmsh.model.getCurrent()
 
         gmsh.model.add("cylinder")
@@ -65,7 +65,7 @@ class Container:
 
         s = gmsh.model.getEntities(2)
 
-        self.set_mesh_fields_from_surfaces(s)
+        self.set_mesh_fields_from_surfaces(s, config)
 
         gmsh.model.mesh.generate(2)
 
@@ -77,6 +77,7 @@ class Container:
         etoff = elementTagsOffset
 
         ntoff, etoff = copy_mesh(m, ntoff, etoff)
+
         gmsh.model.setCurrent('cylinder')
         gmsh.model.remove()
 
@@ -88,11 +89,11 @@ class Container:
         gmsh.model.geo.addVolume([l])
         gmsh.model.geo.synchronize()
 
-        self.set_mesh_fields_from_surfaces(s)
+        self.set_mesh_fields_from_surfaces(s, config)
 
         return ntoff, etoff
 
-    def set_mesh_fields_from_surfaces(self, surfaceTags):
+    def set_mesh_fields_from_surfaces(self, surfaceTags, config):
 
         factory = gmsh.model.occ
         field = gmsh.model.mesh.field
@@ -103,31 +104,23 @@ class Container:
         dtags = []
         ttags = []
 
-        
-        # s = gmsh.model.getEntities(2)
-
         dtag = field.add('Distance')
         dtags.append(dtag)
-        # field.setNumbers(dtag, 'PointsList', [ctag])
-        ## TODO
         field.setNumbers(dtag, 'SurfacesList', [s[1] for s in surfaceTags ])
 
-        # distmin = self.mesh_field_threshold_rad_min_factor * 1.0
-        # distmax = self.mesh_field_threshold_rad_max_factor * 1.0
+        distmin = config.get('mesh.field.interstitial_surface_threshold.dist_min', vartype=float)
+        distmax = config.get('mesh.field.interstitial_surface_threshold.dist_max', vartype=float)
 
-        distmin = 0.3
-        distmax = 0.3
+        sizeon = config.get('mesh.field.interstitial_surface_threshold.size_on', vartype=float)
+        sizeaway = config.get('mesh.field.interstitial_surface_threshold.size_away', vartype=float)
 
         ttag = field.add('Threshold')
         ttags.append(ttag)
         field.setNumber(ttag, "InField", dtag);
-        field.setNumber(ttag, "SizeMin", 0.08);
-        field.setNumber(ttag, "SizeMax", 0.14);
+        field.setNumber(ttag, "SizeMin", sizeon);
+        field.setNumber(ttag, "SizeMax", sizeaway);
         field.setNumber(ttag, "DistMin", distmin);
         field.setNumber(ttag, "DistMax", distmax);
-
-        ## Set background field
-        # backgroundField = 'Min' if self.mesh_field_threshold_size_in <= self.mesh_field_threshold_size_out else 'Max'
 
         backgroundField = 'Min' 
         bftag = field.add(backgroundField);
