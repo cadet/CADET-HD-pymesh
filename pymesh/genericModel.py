@@ -17,7 +17,7 @@ import sys
 import gmsh
 from pathlib import Path
 
-class Model:
+class GenericModel:
 
     def __init__(self, config, logger=Logger(level=0)):
 
