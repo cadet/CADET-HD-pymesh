@@ -156,3 +156,50 @@ def remove_physical_groups():
 
     model.removePhysicalGroups()
 
+
+def copy_mesh(m, nodeTagsOffset, elemTagsOffset, xoff=0.0, yoff=0.0, zoff=0.0, xscale=1.0, yscale=1.0, zscale=1.0): 
+    for e in sorted(m):
+        coords = np.array(m[e][1][1])
+
+        coords[0::3] *= xscale
+        coords[1::3] *= yscale
+        coords[2::3] *= zscale
+
+        coords[0::3] += xoff
+        coords[1::3] += yoff
+        coords[2::3] += zoff
+
+        tag = gmsh.model.addDiscreteEntity(e[0], -1, [b[1] for b in m[e][0]])
+        gmsh.model.mesh.addNodes(e[0], tag, 
+                [ nodeTagsOffset + t for t in m[e][1][0] ], 
+                coords.tolist()
+                )
+        gmsh.model.mesh.addElements(e[0], tag, 
+                m[e][2][0], 
+                [ elemTagsOffset + t for t in m[e][2][1]] , 
+                [ nodeTagsOffset + t for t in m[e][2][2] ] )
+
+    ntoff = nodeTagsOffset + max([ max(v[1][0]) for k,v in m.items() if len( v[1][0] ) != 0 ])
+    etoff = elemTagsOffset + max([ max(v[2][1][elemtypeindex]) for k,v in m.items() for elemtypeindex,_ in enumerate(v[2][0]) if  len(v[2][1][elemtypeindex]) != 0 ])
+
+    return ntoff, etoff
+
+
+def store_mesh(maxDim=-1): 
+    m = {}
+    entities = []
+    for dim in range(maxDim+1) or [-1]: 
+        entities.extend(gmsh.model.getEntities(dim)) 
+    for e in entities:  
+        m[e] = (gmsh.model.getBoundary([e]),
+                gmsh.model.mesh.getNodes(e[0], e[1]),
+                gmsh.model.mesh.getElements(e[0], e[1]))
+
+    # for k,v in m.items():
+    #     for elemtypeindex,elemtype in enumerate(v[2][0]): 
+    #         if len(v[2][1][elemtypeindex]) != 0: 
+    #             print(max(v[2][1][elemtypeindex]))
+    ntoff = max([ max(v[1][0]) for k,v in m.items() if len( v[1][0] ) != 0 ])
+    etoff = max([ max(v[2][1][elemtypeindex]) for k,v in m.items() for elemtypeindex,_ in enumerate(v[2][0]) if  len(v[2][1][elemtypeindex]) != 0 ])
+
+    return m, ntoff, etoff
