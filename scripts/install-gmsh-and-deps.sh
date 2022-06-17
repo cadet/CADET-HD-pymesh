@@ -7,30 +7,32 @@
 
 set -xeuo pipefail
 
-NTHREADS=48
 BASE_DIR=${PWD}
 INSTALL_DIR=${1:-$HOME/local/modules}
 
 TCL_VERSION=8.6.11
 TK_VERSION=8.6.11
 FREETYPE_VERSION=2.12.0
+OCCT_VERSION=7.5.3
+GMSH_VERSION=4.10.3
+
+OCCT_GIT_TAG=V${OCCT_VERSION//./_}
+GMSH_GIT_TAG=gmsh_${GMSH_VERSION//./_}
+
+OCCT_GIT_BRANCH=$GMSH_GIT_TAG
+GMSH_GIT_BRANCH=$GMSH_GIT_TAG
+
+OCCT_DIR_NAME=occt
+GMSH_DIR_NAME=gmsh
+GMSH_BUILD_TYPE=RelWithDebInfo
+NTHREADS=8
 
 TCL_LINK="https://prdownloads.sourceforge.net/tcl/tcl$TCL_VERSION-src.tar.gz"
 TK_LINK="https://prdownloads.sourceforge.net/tcl/tk$TK_VERSION-src.tar.gz"
-
 FREETYPE_LINK="https://sourceforge.net/projects/freetype/files/freetype2/$FREETYPE_VERSION/freetype-$FREETYPE_VERSION.tar.xz"
-
-# OCCT_TAR=
 OCCT_GIT_LINK=https://git.dev.opencascade.org/repos/occt.git
-OCCT_GIT_TAG=V7_5_0
-OCCT_VERSION=7.5.0
-# OCCT_GIT_TAG=V7_5_3
-# OCCT_VERSION=7.5.3
-
-
 GMSH_GIT_LINK=https://gitlab.onelab.info/gmsh/gmsh.git
-GMSH_GIT_TAG=gmsh_4_9_5
-GMSH_VERSION=4.9.5
+
 
 install_tcl()
 {
@@ -71,29 +73,31 @@ install_freetype2()
 
 }
 
-install_occt()
-{
-    mkdir -p "OCCT-$OCCT_VERSION"
-    tar xf $OCCT_TAR -C "OCCT-$OCCT_VERSION" --strip-components=1
-    cd "OCCT-$OCCT_VERSION"
-    mkdir -p build
-    cd build
-    cmake -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/occt/$OCCT_VERSION -D3RDPARTY_TCL_LIBRARY_DIR=$INSTALL_DIR/tcl/$TCL_VERSION/lib/ -D3RDPARTY_TK_LIBRARY_DIR=$INSTALL_DIR/tk/$TK_VERSION/lib -D3RDPARTY_TK_INCLUDE_DIR=$INSTALL_DIR/tk/$TK_VERSION/include/ -D3RDPARTY_TCL_INCLUDE_DIR=$INSTALL_DIR/tcl/$TCL_VERSION/include/ -D3RDPARTY_FREETYPE_DIR=$INSTALL_DIR/freetype/$FREETYPE_VERSION ..
-    make -j $NTHREADS
-    make install
-    cd "$BASE_DIR"
-
-}
+# install_occt()
+# {
+#     mkdir -p "OCCT-$OCCT_VERSION"
+#     tar xf $OCCT_TAR -C "OCCT-$OCCT_VERSION" --strip-components=1
+#     cd "OCCT-$OCCT_VERSION"
+#     mkdir -p build
+#     cd build
+#     cmake -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/$OCCT_DIR_NAME/$OCCT_VERSION -D3RDPARTY_TCL_LIBRARY_DIR=$INSTALL_DIR/tcl/$TCL_VERSION/lib/ -D3RDPARTY_TK_LIBRARY_DIR=$INSTALL_DIR/tk/$TK_VERSION/lib -D3RDPARTY_TK_INCLUDE_DIR=$INSTALL_DIR/tk/$TK_VERSION/include/ -D3RDPARTY_TCL_INCLUDE_DIR=$INSTALL_DIR/tcl/$TCL_VERSION/include/ -D3RDPARTY_FREETYPE_DIR=$INSTALL_DIR/freetype/$FREETYPE_VERSION ..
+#     make -j $NTHREADS
+#     make install
+#     cd "$BASE_DIR"
+# }
 
 install_occt_from_git()
 {
-    git clone "$OCCT_GIT_LINK" occt
-    cd occt
-    git fetch --all --tags
-    git checkout tags/$OCCT_GIT_TAG
+    # git clone "$OCCT_GIT_LINK" occt
+    # cd occt
+    # git fetch --all --tags
+    # git checkout tags/$OCCT_GIT_TAG
+
+    clone_or_pull "$OCCT_GIT_LINK" occt $OCCT_GIT_BRANCH
+
     mkdir -p build
     cd build
-    cmake -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/occt/$OCCT_VERSION -D3RDPARTY_TCL_LIBRARY_DIR=$INSTALL_DIR/tcl/$TCL_VERSION/lib/ -D3RDPARTY_TK_LIBRARY_DIR=$INSTALL_DIR/tk/$TK_VERSION/lib -D3RDPARTY_TK_INCLUDE_DIR=$INSTALL_DIR/tk/$TK_VERSION/include/ -D3RDPARTY_TCL_INCLUDE_DIR=$INSTALL_DIR/tcl/$TCL_VERSION/include/ -D3RDPARTY_FREETYPE_DIR=$INSTALL_DIR/freetype/$FREETYPE_VERSION ..
+    cmake -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/$OCCT_DIR_NAME/$OCCT_VERSION -D3RDPARTY_TCL_LIBRARY_DIR=$INSTALL_DIR/tcl/$TCL_VERSION/lib/ -D3RDPARTY_TK_LIBRARY_DIR=$INSTALL_DIR/tk/$TK_VERSION/lib -D3RDPARTY_TK_INCLUDE_DIR=$INSTALL_DIR/tk/$TK_VERSION/include/ -D3RDPARTY_TCL_INCLUDE_DIR=$INSTALL_DIR/tcl/$TCL_VERSION/include/ -D3RDPARTY_FREETYPE_DIR=$INSTALL_DIR/freetype/$FREETYPE_VERSION ..
     make -j $NTHREADS
     make install
     cd "$BASE_DIR"
@@ -101,16 +105,43 @@ install_occt_from_git()
 
 install_gmsh_from_git()
 {
-    git clone "$GMSH_GIT_LINK" gmsh
+    # git clone "$GMSH_GIT_LINK" gmsh
+    # cd gmsh
+    # git fetch --all --tags
+    # git checkout tags/$GMSH_GIT_TAG
+
+    clone_or_pull "$GMSH_GIT_LINK" gmsh $GMSH_GIT_BRANCH
     cd gmsh
-    git fetch --all --tags
-    git checkout tags/$GMSH_GIT_TAG
     mkdir -p build
     cd build
-    cmake -DCMAKE_PREFIX_PATH=$INSTALL_DIR/occt/$OCCT_VERSION -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/gmsh/$GMSH_VERSION -DENABLE_BUILD_LIB=1 -DENABLE_BUILD_SHARED=1 -DENABLE_BUILD_DYNAMIC=1 -DENABLE_OPENMP=1 ..
+    cmake -DCMAKE_BUILD_TYPE=$GMSH_BUILD_TYPE -DCMAKE_PREFIX_PATH=$INSTALL_DIR/$OCCT_DIR_NAME/$OCCT_VERSION -DCMAKE_INSTALL_PREFIX=$INSTALL_DIR/$GMSH_DIR_NAME/$GMSH_VERSION -DENABLE_BUILD_LIB=1 -DENABLE_BUILD_SHARED=1 -DENABLE_BUILD_DYNAMIC=1 -DENABLE_OPENMP=1 ..
     make -j $NTHREADS
     make install
     cd "$BASE_DIR"
+}
+
+clone_or_pull()
+{
+    LINK="$1"
+    DIR="$2"
+    BRANCH="$3"
+
+    LOCAL_BASE_DIR="$PWD"
+    
+    if [ -d "$DIR" ]; then
+        cd "$DIR"
+        if [ -n $BRANCH ]; then
+            git checkout $BRANCH
+        fi
+        git pull
+        cd "$LOCAL_BASE_DIR"
+    else
+        if [ -n $BRANCH ]; then
+            git clone -b $BRANCH $LINK $DIR
+        else
+            git clone $LINK $DIR
+        fi
+    fi
 }
 
 check_pre()
