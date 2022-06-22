@@ -20,6 +20,7 @@ container:
   periodicity: True
   end_face_sections: 5
 mesh:
+  method: generic or copymesh
   size: 0.2
   sizeout: 0.2
   sizein: 0.2
@@ -41,3 +42,4 @@ gmsh:
 general: 
   fragment: True
   improved_bbox_calc: False
+  nproc: 4 # For copymesh

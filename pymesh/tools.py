@@ -5,6 +5,8 @@ from functools import reduce
 import gmsh
 import numpy as np
 
+from pymesh.log import Logger
+
 def bin_to_arr(filename, format):
     """
     Read binary data into array
@@ -156,9 +158,42 @@ def remove_physical_groups():
 
     model.removePhysicalGroups()
 
+def copy_mesh(m, nodeTagsOffset, elemTagsOffset, xoff=0.0, yoff=0.0, zoff=0.0, xscale=1.0, yscale=1.0, zscale=1.0, objectIndex=0, boundaries=False): 
 
-def copy_mesh(m, nodeTagsOffset, elemTagsOffset, xoff=0.0, yoff=0.0, zoff=0.0, xscale=1.0, yscale=1.0, zscale=1.0, boundaries=False): 
-    for e in sorted(m):
+    # WARNING:
+    # Objectindex is the pseudo index for the current object being copied
+    # It is used to calculate and offset tags for newly created objects
+    # It starts with 1
+
+    logger = Logger()
+    logger.warn(f"Copying Bead with {zoff = }")
+
+    entities =  list(m.keys())
+    tags = []
+    logger.warn(f"{len(entities) = }")
+
+    print(objectIndex)
+
+    if objectIndex == 0: 
+
+        tags = [ -1 ] * len(entities)
+
+    else: 
+
+        points = len([(x,y) for x,y in entities if x == 0])
+        lines = len([(x,y) for x,y in entities if x == 1])
+        surfaces = len([(x,y) for x,y in entities if x == 2])
+        volumes = len([(x,y) for x,y in entities if x == 3])
+
+        tags.extend(list(range((objectIndex-1)*points+1  ,objectIndex*points+1)))
+        tags.extend(list(range((objectIndex-1)*lines+1   ,objectIndex*lines+1) ))
+        tags.extend(list(range((objectIndex-1)*surfaces+1,objectIndex*surfaces+1)))
+        tags.extend(list(range((objectIndex-1)*volumes+1 ,objectIndex*volumes+1) ))
+
+    print(tags)
+
+    for e,tag in zip(sorted(m), tags):
+        logger.warn(f"{e} -> {tag}")
         coords = np.array(m[e][1][1])
 
         coords[0::3] *= xscale
@@ -177,12 +212,13 @@ def copy_mesh(m, nodeTagsOffset, elemTagsOffset, xoff=0.0, yoff=0.0, zoff=0.0, x
         else: 
             boundaries_tags = []
 
-        tag = gmsh.model.addDiscreteEntity(e[0], -1, boundaries_tags)
-        gmsh.model.mesh.addNodes(e[0], tag, 
+        _tag = gmsh.model.addDiscreteEntity(e[0], tag, boundaries_tags)
+        logger.warn(f"    > Copied entity to tag {_tag}")
+        gmsh.model.mesh.addNodes(e[0], _tag, 
                 [ nodeTagsOffset + t for t in m[e][1][0] ], 
                 coords.tolist()
                 )
-        gmsh.model.mesh.addElements(e[0], tag, 
+        gmsh.model.mesh.addElements(e[0], _tag, 
                 m[e][2][0], 
                 [ elemTagsOffset + t for t in m[e][2][1]] , 
                 [ nodeTagsOffset + t for t in m[e][2][2] ] )
@@ -190,8 +226,7 @@ def copy_mesh(m, nodeTagsOffset, elemTagsOffset, xoff=0.0, yoff=0.0, zoff=0.0, x
     ntoff = nodeTagsOffset + max([ max(v[1][0]) for k,v in m.items() if len( v[1][0] ) != 0 ])
     etoff = elemTagsOffset + max([ max(v[2][1][elemtypeindex]) for k,v in m.items() for elemtypeindex,_ in enumerate(v[2][0]) if  len(v[2][1][elemtypeindex]) != 0 ])
 
-    return ntoff, etoff
-
+    return int(ntoff), int(etoff)
 
 def store_mesh(maxDim=-1): 
     m = {}
@@ -210,4 +245,4 @@ def store_mesh(maxDim=-1):
     ntoff = max([ max(v[1][0]) for k,v in m.items() if len( v[1][0] ) != 0 ])
     etoff = max([ max(v[2][1][elemtypeindex]) for k,v in m.items() for elemtypeindex,_ in enumerate(v[2][0]) if  len(v[2][1][elemtypeindex]) != 0 ])
 
-    return m, ntoff, etoff
+    return m, int(ntoff), int(etoff)

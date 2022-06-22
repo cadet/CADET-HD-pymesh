@@ -57,6 +57,8 @@ class Container:
         return self.entities
 
     def copy_mesh(self, nodeTagsOffset, elementTagsOffset, config): 
+
+        self.logger.warn("Copying container!!")
         current_model = gmsh.model.getCurrent()
 
         gmsh.model.add("cylinder")

@@ -26,7 +26,7 @@ class Bead:
         if self.tag == -1:
             object.__setattr__(self, 'tag', gmsh.model.occ.addSphere(self.x, self.y, self.z, self.r))
 
-    def copy_mesh(self, m, ntoff, etoff ):
+    def copy_mesh(self, m, ntoff, etoff, objectIndex ):
         ntoff, etoff= copy_mesh(
                 m, 
                 ntoff, etoff, 
@@ -36,6 +36,7 @@ class Bead:
                 xscale = self.r,
                 yscale = self.r,
                 zscale = self.r,
+                objectIndex = objectIndex
                 )
         return ntoff, etoff
 

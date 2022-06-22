@@ -13,6 +13,10 @@ from pymesh.tools import bin_to_arr, grouper, get_surface_normals, get_volume_no
 from pymesh.bead import Bead
 from pymesh.log import Logger
 
+from pymesh.tools import copy_mesh
+import multiprocessing as mp
+from itertools import repeat
+
 import struct
 import numpy as np
 import gmsh
@@ -40,6 +44,7 @@ class PackedBed:
         self.mesh_ref_radius                     = config.mesh_ref_radius
         self.mesh_field_threshold_rad_min_factor = config.mesh_field_threshold_rad_min_factor
         self.mesh_field_threshold_rad_max_factor = config.mesh_field_threshold_rad_max_factor
+        self.nproc = config.general_nproc
 
         self.read_packing()
         if self.auto_translate:
@@ -407,20 +412,54 @@ class PackedBed:
         self.set_threshold_for_reference_mesh()
 
         gmsh.model.mesh.generate(3)
-        m, _, _ = store_mesh(3)
+        m, ntoffdelta, etoffdelta= store_mesh(3)
 
         gmsh.model.setCurrent(current_model)
 
         ntoff = nodeTagsOffset
         etoff = elementTagsOffset
 
-        for bead in self.beads:
-            ntoff, etoff = bead.copy_mesh(m, ntoff, etoff)
+        ntoffs = list(range(nodeTagsOffset, len(self.beads) * ntoffdelta, ntoffdelta ))
+        etoffs = list(range(elementTagsOffset, len(self.beads) * etoffdelta, etoffdelta ))
+
+        ## NOTE: Parallel attempt
+        # for me, no, eo, x,y,z,xs,ys,zs in  zip(
+        #         repeat(m), 
+        #         ntoffs, etoffs, 
+        #         map(lambda b: b.x, self.beads),
+        #         map(lambda b: b.y, self.beads),
+        #         map(lambda b: b.z, self.beads),
+        #         map(lambda b: b.r, self.beads),
+        #         map(lambda b: b.r, self.beads),
+        #         map(lambda b: b.r, self.beads),
+        #         ): 
+        #     print(no, eo, x,y,z,xs,ys,zs)
+        # self.logger.die()
+
+        # with mp.Pool(self.nproc) as pool:
+        #     pool.starmap(copy_mesh,
+        #             zip(
+        #                 repeat(m),
+        #                 ntoffs, etoffs,
+        #                 map(lambda b: b.x, self.beads),
+        #                 map(lambda b: b.y, self.beads),
+        #                 map(lambda b: b.z, self.beads),
+        #                 map(lambda b: b.r, self.beads),
+        #                 map(lambda b: b.r, self.beads),
+        #                 map(lambda b: b.r, self.beads),
+        #                 range(1,len(self.beads)+1)
+        #                 )
+        #             )
+
+        for ind, (bead,no,eo) in enumerate(zip(self.beads,ntoffs,etoffs)):
+            self.logger.warn(f"Index = {ind+1}")
+            ntoff, etoff = bead.copy_mesh(m, ntoff, etoff, ind+1)
 
         gmsh.model.setCurrent('reference')
         gmsh.model.remove()
 
         gmsh.model.setCurrent(current_model)
+        gmsh.model.occ.synchronize()
         gmsh.model.geo.synchronize()
 
         # gmsh.write('test.vtk')
