@@ -13,7 +13,7 @@ from pymesh.tools import bin_to_arr, grouper, get_surface_normals, get_volume_no
 from pymesh.bead import Bead
 from pymesh.log import Logger
 
-from pymesh.tools import copy_mesh
+from pymesh.tools import copy_mesh, add_nodes_multi, add_elements_multi
 import multiprocessing as mp
 from itertools import repeat
 
@@ -416,44 +416,12 @@ class PackedBed:
 
         gmsh.model.setCurrent(current_model)
 
-        ntoff = nodeTagsOffset
-        etoff = elementTagsOffset
+        offsets = list(map(lambda b: (b.x, b.y, b.z, b.r), self.beads))
 
-        ntoffs = list(range(nodeTagsOffset, len(self.beads) * ntoffdelta, ntoffdelta ))
-        etoffs = list(range(elementTagsOffset, len(self.beads) * etoffdelta, etoffdelta ))
-
-        ## NOTE: Parallel attempt
-        # for me, no, eo, x,y,z,xs,ys,zs in  zip(
-        #         repeat(m), 
-        #         ntoffs, etoffs, 
-        #         map(lambda b: b.x, self.beads),
-        #         map(lambda b: b.y, self.beads),
-        #         map(lambda b: b.z, self.beads),
-        #         map(lambda b: b.r, self.beads),
-        #         map(lambda b: b.r, self.beads),
-        #         map(lambda b: b.r, self.beads),
-        #         ): 
-        #     print(no, eo, x,y,z,xs,ys,zs)
-        # self.logger.die()
-
-        # with mp.Pool(self.nproc) as pool:
-        #     pool.starmap(copy_mesh,
-        #             zip(
-        #                 repeat(m),
-        #                 ntoffs, etoffs,
-        #                 map(lambda b: b.x, self.beads),
-        #                 map(lambda b: b.y, self.beads),
-        #                 map(lambda b: b.z, self.beads),
-        #                 map(lambda b: b.r, self.beads),
-        #                 map(lambda b: b.r, self.beads),
-        #                 map(lambda b: b.r, self.beads),
-        #                 range(1,len(self.beads)+1)
-        #                 )
-        #             )
-
-        for ind, (bead,no,eo) in enumerate(zip(self.beads,ntoffs,etoffs)):
-            self.logger.warn(f"Index = {ind+1}")
-            ntoff, etoff = bead.copy_mesh(m, ntoff, etoff, ind+1)
+        ntoff, tagss = add_nodes_multi(m,nodeTagsOffset,offsets)
+        gmsh.model.mesh.destroyMeshCaches()
+        etoff = add_elements_multi(m,nodeTagsOffset,elementTagsOffset,tagss)
+        gmsh.model.mesh.destroyMeshCaches()
 
         gmsh.model.setCurrent('reference')
         gmsh.model.remove()
@@ -462,7 +430,6 @@ class PackedBed:
         gmsh.model.occ.synchronize()
         gmsh.model.geo.synchronize()
 
-        # gmsh.write('test.vtk')
         return ntoff, etoff
 
     def set_threshold_for_reference_mesh(self): 

@@ -1,0 +1,326 @@
+diff --git a/api/gmsh.h b/api/gmsh.h
+index c23beab54..96fcda130 100644
+--- a/api/gmsh.h
++++ b/api/gmsh.h
+@@ -794,6 +794,12 @@ namespace gmsh { // Top-level functions
+                              const std::vector<double> & coord,
+                              const std::vector<double> & parametricCoord = std::vector<double>());
+ 
++      GMSH_API void addNodesCustom(const int dim,
++                             const int tag,
++                             const std::vector<std::size_t> & nodeTags,
++                             const std::vector<double> & coord,
++                             const std::vector<double> & parametricCoord = std::vector<double>());
++
+       // gmsh::model::mesh::reclassifyNodes
+       //
+       // Reclassify all nodes on their associated model entity, based on the
+@@ -998,6 +1004,12 @@ namespace gmsh { // Top-level functions
+                                 const std::vector<std::vector<std::size_t> > & elementTags,
+                                 const std::vector<std::vector<std::size_t> > & nodeTags);
+ 
++      GMSH_API void addElementsCustom(const int dim,
++                                const int tag,
++                                const std::vector<int> & elementTypes,
++                                const std::vector<std::vector<std::size_t> > & elementTags,
++                                const std::vector<std::vector<std::size_t> > & nodeTags);
++
+       // gmsh::model::mesh::addElementsByType
+       //
+       // Add elements of type `elementType' classified on the entity of tag `tag'.
+diff --git a/api/gmsh.py b/api/gmsh.py
+index 749d2132d..cf80d2245 100644
+--- a/api/gmsh.py
++++ b/api/gmsh.py
+@@ -2029,6 +2029,46 @@ class model:
+                 raise Exception(logger.getLastError())
+         add_nodes = addNodes
+ 
++        @staticmethod
++        def addNodesCustom(dim, tag, nodeTags, coord, parametricCoord=[]):
++            """
++            gmsh.model.mesh.addNodes(dim, tag, nodeTags, coord, parametricCoord=[])
++
++            Add nodes classified on the model entity of dimension `dim' and tag `tag'.
++            `nodeTags' contains the node tags (their unique, strictly positive
++            identification numbers). `coord' is a vector of length 3 times the length
++            of `nodeTags' that contains the x, y, z coordinates of the nodes,
++            concatenated: [n1x, n1y, n1z, n2x, ...]. The optional `parametricCoord'
++            vector contains the parametric coordinates of the nodes, if any. The length
++            of `parametricCoord' can be 0 or `dim' times the length of `nodeTags'. If
++            the `nodeTags' vector is empty, new tags are automatically assigned to the
++            nodes.
++            """
++            api_nodeTags_, api_nodeTags_n_ = _ivectorsize(nodeTags)
++            api_coord_, api_coord_n_ = _ivectordouble(coord)
++            api_parametricCoord_, api_parametricCoord_n_ = _ivectordouble(parametricCoord)
++            ierr = c_int()
++            lib.gmshModelMeshAddNodesCustom(
++                c_int(dim),
++                c_int(tag),
++                api_nodeTags_, api_nodeTags_n_,
++                api_coord_, api_coord_n_,
++                api_parametricCoord_, api_parametricCoord_n_,
++                byref(ierr))
++            if ierr.value != 0:
++                raise Exception(logger.getLastError())
++        add_nodes_custom = addNodesCustom
++
++        @staticmethod
++        def destroyMeshCaches():
++            """
++            """
++            ierr = c_int()
++            lib.gmodelDestroyMeshCaches(
++                byref(ierr))
++            if ierr.value != 0:
++                raise Exception(logger.getLastError())
++
+         @staticmethod
+         def reclassifyNodes():
+             """
+@@ -2448,6 +2488,37 @@ class model:
+                 raise Exception(logger.getLastError())
+         add_elements = addElements
+ 
++        @staticmethod
++        def addElementsCustom(dim, tag, elementTypes, elementTags, nodeTags):
++            """
++            gmsh.model.mesh.addElements(dim, tag, elementTypes, elementTags, nodeTags)
++
++            Add elements classified on the entity of dimension `dim' and tag `tag'.
++            `types' contains the MSH types of the elements (e.g. `2' for 3-node
++            triangles: see the Gmsh reference manual). `elementTags' is a vector of the
++            same length as `types'; each entry is a vector containing the tags (unique,
++            strictly positive identifiers) of the elements of the corresponding type.
++            `nodeTags' is also a vector of the same length as `types'; each entry is a
++            vector of length equal to the number of elements of the given type times
++            the number N of nodes per element, that contains the node tags of all the
++            elements of the given type, concatenated: [e1n1, e1n2, ..., e1nN, e2n1,
++            ...].
++            """
++            api_elementTypes_, api_elementTypes_n_ = _ivectorint(elementTypes)
++            api_elementTags_, api_elementTags_n_, api_elementTags_nn_ = _ivectorvectorsize(elementTags)
++            api_nodeTags_, api_nodeTags_n_, api_nodeTags_nn_ = _ivectorvectorsize(nodeTags)
++            ierr = c_int()
++            lib.gmshModelMeshAddElementsCustom(
++                c_int(dim),
++                c_int(tag),
++                api_elementTypes_, api_elementTypes_n_,
++                api_elementTags_, api_elementTags_n_, api_elementTags_nn_,
++                api_nodeTags_, api_nodeTags_n_, api_nodeTags_nn_,
++                byref(ierr))
++            if ierr.value != 0:
++                raise Exception(logger.getLastError())
++        add_elements_custom = addElementsCustom
++
+         @staticmethod
+         def addElementsByType(tag, elementType, elementTags, nodeTags):
+             """
+@@ -8614,3 +8685,5 @@ class logger:
+             raise Exception('Could not get last error')
+         return _ostring(api_error_)
+     get_last_error = getLastError
++
++
+diff --git a/api/gmshc.cpp b/api/gmshc.cpp
+index 46d9cc588..55a5744cb 100644
+--- a/api/gmshc.cpp
++++ b/api/gmshc.cpp
+@@ -6,6 +6,7 @@
+ #include <string.h>
+ #include <stdlib.h>
+ #include "gmsh.h"
++#include "../src/geo/GModel.h"
+ 
+ extern "C" {
+   #include "gmshc.h"
+@@ -1160,6 +1161,20 @@ GMSH_API void gmshModelMeshAddNodes(const int dim, const int tag, const size_t *
+   }
+ }
+ 
++GMSH_API void gmshModelMeshAddNodesCustom(const int dim, const int tag, const size_t * nodeTags, const size_t nodeTags_n, const double * coord, const size_t coord_n, const double * parametricCoord, const size_t parametricCoord_n, int * ierr)
++{
++  if(ierr) *ierr = 0;
++  try {
++    std::vector<std::size_t> api_nodeTags_(nodeTags, nodeTags + nodeTags_n);
++    std::vector<double> api_coord_(coord, coord + coord_n);
++    std::vector<double> api_parametricCoord_(parametricCoord, parametricCoord + parametricCoord_n);
++    gmsh::model::mesh::addNodesCustom(dim, tag, api_nodeTags_, api_coord_, api_parametricCoord_);
++  }
++  catch(...){
++    if(ierr) *ierr = 1;
++  }
++}
++
+ GMSH_API void gmshModelMeshReclassifyNodes(int * ierr)
+ {
+   if(ierr) *ierr = 0;
+@@ -1363,6 +1378,24 @@ GMSH_API void gmshModelMeshAddElements(const int dim, const int tag, const int *
+   }
+ }
+ 
++GMSH_API void gmshModelMeshAddElementsCustom(const int dim, const int tag, const int * elementTypes, const size_t elementTypes_n, const size_t * const * elementTags, const size_t * elementTags_n, const size_t elementTags_nn, const size_t * const * nodeTags, const size_t * nodeTags_n, const size_t nodeTags_nn, int * ierr)
++{
++  if(ierr) *ierr = 0;
++  try {
++    std::vector<int> api_elementTypes_(elementTypes, elementTypes + elementTypes_n);
++    std::vector<std::vector<std::size_t> > api_elementTags_(elementTags_nn);
++    for(size_t i = 0; i < elementTags_nn; ++i)
++      api_elementTags_[i] = std::vector<std::size_t>(elementTags[i], elementTags[i] + elementTags_n[i]);
++    std::vector<std::vector<std::size_t> > api_nodeTags_(nodeTags_nn);
++    for(size_t i = 0; i < nodeTags_nn; ++i)
++      api_nodeTags_[i] = std::vector<std::size_t>(nodeTags[i], nodeTags[i] + nodeTags_n[i]);
++    gmsh::model::mesh::addElementsCustom(dim, tag, api_elementTypes_, api_elementTags_, api_nodeTags_);
++  }
++  catch(...){
++    if(ierr) *ierr = 1;
++  }
++}
++
+ GMSH_API void gmshModelMeshAddElementsByType(const int tag, const int elementType, const size_t * elementTags, const size_t elementTags_n, const size_t * nodeTags, const size_t nodeTags_n, int * ierr)
+ {
+   if(ierr) *ierr = 0;
+@@ -4937,3 +4970,14 @@ GMSH_API void gmshLoggerGetLastError(char ** error, int * ierr)
+   }
+ }
+ 
++
++GMSH_API void gmodelDestroyMeshCaches(int * ierr)
++{
++  if(ierr) *ierr = 0;
++  try {
++    GModel::current()->destroyMeshCaches();
++  }
++  catch(...){
++    if(ierr) *ierr = 1;
++  }
++}
+diff --git a/api/gmshc.h b/api/gmshc.h
+index 7ec16a941..9968046c6 100644
+--- a/api/gmshc.h
++++ b/api/gmshc.h
+@@ -685,6 +685,13 @@ GMSH_API void gmshModelMeshAddNodes(const int dim,
+                                     const double * parametricCoord, const size_t parametricCoord_n,
+                                     int * ierr);
+ 
++GMSH_API void gmshModelMeshAddNodesCustom(const int dim,
++                                    const int tag,
++                                    const size_t * nodeTags, const size_t nodeTags_n,
++                                    const double * coord, const size_t coord_n,
++                                    const double * parametricCoord, const size_t parametricCoord_n,
++                                    int * ierr);
++
+ /* Reclassify all nodes on their associated model entity, based on the
+  * elements. Can be used when importing nodes in bulk (e.g. by associating
+  * them all to a single volume), to reclassify them correctly on model
+@@ -871,6 +878,13 @@ GMSH_API void gmshModelMeshAddElements(const int dim,
+                                        const size_t * const * nodeTags, const size_t * nodeTags_n, const size_t nodeTags_nn,
+                                        int * ierr);
+ 
++GMSH_API void gmshModelMeshAddElementsCustom(const int dim,
++                                       const int tag,
++                                       const int * elementTypes, const size_t elementTypes_n,
++                                       const size_t * const * elementTags, const size_t * elementTags_n, const size_t elementTags_nn,
++                                       const size_t * const * nodeTags, const size_t * nodeTags_n, const size_t nodeTags_nn,
++                                       int * ierr);
++
+ /* Add elements of type `elementType' classified on the entity of tag `tag'.
+  * `elementTags' contains the tags (unique, strictly positive identifiers) of
+  * the elements of the corresponding type. `nodeTags' is a vector of length
+@@ -3372,4 +3386,6 @@ GMSH_API double gmshLoggerGetCpuTime(int * ierr);
+ GMSH_API void gmshLoggerGetLastError(char ** error,
+                                      int * ierr);
+ 
++GMSH_API void gmodelDestroyMeshCaches(int * ierr);
++
+ #endif
+diff --git a/src/common/gmsh.cpp b/src/common/gmsh.cpp
+index ee5b46ea5..e6684c8ad 100644
+--- a/src/common/gmsh.cpp
++++ b/src/common/gmsh.cpp
+@@ -1751,6 +1751,53 @@ GMSH_API void gmsh::model::mesh::addNodes(
+   GModel::current()->destroyMeshCaches();
+ }
+ 
++GMSH_API void gmsh::model::mesh::addNodesCustom(
++  const int dim, const int tag, const std::vector<std::size_t> &nodeTags,
++  const std::vector<double> &coord, const std::vector<double> &parametricCoord)
++{
++  if(!_checkInit()) return;
++  GEntity *ge = GModel::current()->getEntityByTag(dim, tag);
++  if(!ge) {
++    Msg::Error("%s does not exist", _getEntityName(dim, tag).c_str());
++    return;
++  }
++  int numNodeTags = nodeTags.size(), numNodes = nodeTags.size();
++  if(!numNodeTags) { // this is allowed: we will assign new tags
++    numNodes = coord.size() / 3;
++  }
++  if((int)coord.size() != 3 * numNodes) {
++    Msg::Error("Wrong number of coordinates");
++    return;
++  }
++  bool param = false;
++  if(parametricCoord.size()) {
++    if((int)parametricCoord.size() != dim * numNodes) {
++      Msg::Error("Wrong number of parametric coordinates");
++      return;
++    }
++    param = true;
++  }
++  for(int i = 0; i < numNodes; i++) {
++    std::size_t tag = (numNodeTags ? nodeTags[i] : 0); // 0 = automatic tag
++    double x = coord[3 * i];
++    double y = coord[3 * i + 1];
++    double z = coord[3 * i + 2];
++    MVertex *vv = nullptr;
++    if(param && dim == 1) {
++      double u = parametricCoord[i];
++      vv = new MEdgeVertex(x, y, z, ge, u, tag);
++    }
++    else if(param && dim == 2) {
++      double u = parametricCoord[2 * i];
++      double v = parametricCoord[2 * i + 1];
++      vv = new MFaceVertex(x, y, z, ge, u, v, tag);
++    }
++    else
++      vv = new MVertex(x, y, z, ge, tag);
++    ge->mesh_vertices.push_back(vv);
++  }
++}
++
+ GMSH_API void gmsh::model::mesh::reclassifyNodes()
+ {
+   if(!_checkInit()) return;
+@@ -2064,6 +2111,30 @@ GMSH_API void gmsh::model::mesh::addElements(
+   GModel::current()->destroyMeshCaches();
+ }
+ 
++GMSH_API void gmsh::model::mesh::addElementsCustom(
++  const int dim, const int tag, const std::vector<int> &elementTypes,
++  const std::vector<std::vector<std::size_t> > &elementTags,
++  const std::vector<std::vector<std::size_t> > &nodeTags)
++{
++  if(!_checkInit()) return;
++  GEntity *ge = GModel::current()->getEntityByTag(dim, tag);
++  if(!ge) {
++    Msg::Error("%s does not exist", _getEntityName(dim, tag).c_str());
++    return;
++  }
++  if(elementTypes.size() != elementTags.size()) {
++    Msg::Error("Wrong number of element tags");
++    return;
++  }
++  if(elementTypes.size() != nodeTags.size()) {
++    Msg::Error("Wrong number of node tags");
++    return;
++  }
++
++  for(std::size_t i = 0; i < elementTypes.size(); i++)
++    _addElements(dim, tag, ge, elementTypes[i], elementTags[i], nodeTags[i]);
++}
++
+ GMSH_API void gmsh::model::mesh::addElementsByType(
+   const int tag, const int elementType,
+   const std::vector<std::size_t> &elementTags,
