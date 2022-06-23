@@ -1,5 +1,7 @@
 """
-New CopyModel class that builds the column using 
+New CopyModel class that builds the column by generating a reference sphere, and copying it to create a packed bed. The container is created similarly, but only the surface mesh is copied over. The interstitial region is then generated.
+
+Mesh copy now uses modified versions of addNodes() and addElements() in gmsh. See the `custom_mesh_copy.patch` for details. Works for gmsh commit 2ac03e26721ff5ffe20759ef4ad474da6cbf4b44. 
 
 contract:
     - must create individual columns given a config
@@ -24,7 +26,7 @@ class CopyMeshModel:
     def __init__(self, config, logger=Logger(level=0)):
 
         self.logger = logger
-        self.logger.out("Initializing CopyModel")
+        self.logger.out("Initializing CopyMeshModel")
 
         self.container_periodicity = config.container_periodicity
         self.container_linked      = config.container_linked

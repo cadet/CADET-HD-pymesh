@@ -166,13 +166,9 @@ def copy_mesh(m, nodeTagsOffset, elemTagsOffset, xoff=0.0, yoff=0.0, zoff=0.0, x
     # It starts with 1
 
     logger = Logger()
-    logger.warn(f"Copying Bead with {zoff = }")
 
     entities =  list(m.keys())
     tags = []
-    logger.warn(f"{len(entities) = }")
-
-    print(objectIndex)
 
     if objectIndex == 0: 
 
@@ -190,10 +186,8 @@ def copy_mesh(m, nodeTagsOffset, elemTagsOffset, xoff=0.0, yoff=0.0, zoff=0.0, x
         tags.extend(list(range((objectIndex-1)*surfaces+1,objectIndex*surfaces+1)))
         tags.extend(list(range((objectIndex-1)*volumes+1 ,objectIndex*volumes+1) ))
 
-    print(tags)
-
     for e,tag in zip(sorted(m), tags):
-        logger.warn(f"{e} -> {tag}")
+        # logger.warn(f"{e} -> {tag}")
         coords = np.array(m[e][1][1])
 
         coords[0::3] *= xscale
@@ -213,7 +207,7 @@ def copy_mesh(m, nodeTagsOffset, elemTagsOffset, xoff=0.0, yoff=0.0, zoff=0.0, x
             boundaries_tags = []
 
         _tag = gmsh.model.addDiscreteEntity(e[0], tag, boundaries_tags)
-        logger.warn(f"    > Copied entity to tag {_tag}")
+        # logger.warn(f"    > Copied entity to tag {_tag}")
         gmsh.model.mesh.addNodes(e[0], _tag, 
                 [ nodeTagsOffset + t for t in m[e][1][0] ], 
                 coords.tolist()
@@ -229,6 +223,12 @@ def copy_mesh(m, nodeTagsOffset, elemTagsOffset, xoff=0.0, yoff=0.0, zoff=0.0, x
     return int(ntoff), int(etoff)
 
 def add_nodes_multi(m, nodeTagsOffset:int, offsets:list, boundaries=False, auto_tag=False, tag_offsets=(0,0,0,0)): 
+    """
+    Add nodes from an existing mesh.
+    Works with a patched gmsh: Apply `custom_mesh_copy.patch` onto commit 2ac03e26721ff5ffe20759ef4ad474da6cbf4b44
+    Removes the invocation of `destroyMeshCaches()` at the end of every addNodes().
+    destroyMeshCaches() must now be called manually after this function.
+    """
 
     ## TODO: option to autocalculate tag_offsets from current gmsh model for cases?? . 
     logger = Logger()
@@ -237,7 +237,7 @@ def add_nodes_multi(m, nodeTagsOffset:int, offsets:list, boundaries=False, auto_
     num_nodes = max([ max(v[1][0]) for k,v in m.items() if len( v[1][0] ) != 0 ])
     entities =  list(m.keys())
 
-    logger.warn(f"Adding nodes (multi) for {num_objects} objects.")
+    logger.out(f"Adding nodes (multi) for {num_objects} objects.")
 
     num_points = len([(x,y) for x,y in entities if x == 0])
     num_lines = len([(x,y) for x,y in entities if x == 1])
@@ -286,14 +286,17 @@ def add_nodes_multi(m, nodeTagsOffset:int, offsets:list, boundaries=False, auto_
                     )
     ntoff = nodeTagsOffset + num_nodes * num_objects
 
-    logger.warn("Done adding nodes")
+    logger.out("Done adding nodes")
 
     return ntoff, tagss
 
 
 def add_elements_multi(m, nodeTagsOffset:int, elemTagsOffset:int, tagss:list): 
     """
-    Add multiple 
+    Add elements from an existing mesh, multiple times.
+    Works with a patched gmsh: Apply `custom_mesh_copy.patch` onto commit 2ac03e26721ff5ffe20759ef4ad474da6cbf4b44
+    Removes the invocation of `destroyMeshCaches()` at the end of every addElements().
+    destroyMeshCaches() must now be called manually before and after this function.
     """
     num_elements = max([ max(v[2][1][elemtypeindex]) for k,v in m.items() for elemtypeindex,_ in enumerate(v[2][0]) if  len(v[2][1][elemtypeindex]) != 0 ])
     num_nodes = max([ max(v[1][0]) for k,v in m.items() if len( v[1][0] ) != 0 ])
@@ -301,7 +304,7 @@ def add_elements_multi(m, nodeTagsOffset:int, elemTagsOffset:int, tagss:list):
     num_objects = len(tagss)
 
     logger = Logger()
-    logger.warn(f"Adding elements (multi) for {num_objects} objects.")
+    logger.out(f"Adding elements (multi) for {num_objects} objects.")
 
     for index,tags in enumerate(tagss): 
         for e, tag in zip(sorted(m), tags):
@@ -311,7 +314,7 @@ def add_elements_multi(m, nodeTagsOffset:int, elemTagsOffset:int, tagss:list):
                     [ nodeTagsOffset + num_nodes * index + t for t in m[e][2][2] ] )
 
     etoff = elemTagsOffset + num_elements * num_objects
-    logger.warn(f"Done adding elements")
+    logger.out(f"Done adding elements")
     return etoff
 
 
