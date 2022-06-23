@@ -47,8 +47,6 @@ def pymesh():
         defaultModel.mesh()
         defaultModel.write()
 
-    except:
-        raise
     finally:
         ts = logger.timestamp if config.output_log_timestamp else ''
         with open(str(config.output_filename) + ts + '.gmsh.log', 'w') as ofile:
