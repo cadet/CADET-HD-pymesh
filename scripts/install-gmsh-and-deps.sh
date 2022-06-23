@@ -19,7 +19,7 @@ GMSH_VERSION=4.10.3
 OCCT_GIT_TAG=V${OCCT_VERSION//./_}
 GMSH_GIT_TAG=gmsh_${GMSH_VERSION//./_}
 
-OCCT_GIT_BRANCH=$GMSH_GIT_TAG
+OCCT_GIT_BRANCH=$OCCT_GIT_TAG
 GMSH_GIT_BRANCH=$GMSH_GIT_TAG
 
 OCCT_DIR_NAME=occt
@@ -94,6 +94,7 @@ install_occt_from_git()
     # git checkout tags/$OCCT_GIT_TAG
 
     clone_or_pull "$OCCT_GIT_LINK" occt $OCCT_GIT_BRANCH
+    cd occt
 
     mkdir -p build
     cd build
@@ -133,7 +134,10 @@ clone_or_pull()
         if [ -n $BRANCH ]; then
             git checkout $BRANCH
         fi
-        git pull
+        ## Don't pull if in detached head, i.e., tagged commits
+        if [ $(git rev-parse --symbolic-full-name HEAD) != "HEAD" ]; then 
+            git pull
+        fi
         cd "$LOCAL_BASE_DIR"
     else
         if [ -n $BRANCH ]; then
