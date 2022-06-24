@@ -13,9 +13,7 @@ from pymesh.tools import bin_to_arr, grouper, get_surface_normals, get_volume_no
 from pymesh.bead import Bead
 from pymesh.log import Logger
 
-from pymesh.tools import copy_mesh, add_nodes_multi, add_elements_multi
-import multiprocessing as mp
-from itertools import repeat
+from pymesh.tools import add_nodes_multi, add_elements_multi
 
 import struct
 import numpy as np
@@ -26,6 +24,13 @@ from itertools import combinations
 class PackedBed:
 
     def __init__(self, config, generate=True, logger=Logger(level=2)):
+        """
+        Initialize PackedBed
+
+        > Read packing information
+        > Move bed to center if config.auto_translate:bool == True
+        > Generate entities (geometric) if generate == True
+        """
 
         self.logger = logger
 
@@ -46,15 +51,29 @@ class PackedBed:
         self.mesh_field_threshold_rad_max_factor = config.mesh_field_threshold_rad_max_factor
         self.nproc = config.general_nproc
 
+        self.target_volume = config.packedbed_target_volume
+
         self.read_packing()
         if self.auto_translate:
             self.moveBedtoCenter()
+
+        self.updateBounds()
+        self.print_bounds()
+
+        if self.target_volume > 0.0: 
+            self.prune_to_volume(self.target_volume)
+
         if generate: 
             self.generate()
 
         # print(*[bead for bead in self.beads], sep='\n')
 
     def read_packing(self):
+        """
+        Read packing data from a given xyzd file
+        If nbeads < 0, read all particles in the packing, else only nbeads particles
+        Scale packing and particle size by given factors
+        """
         # dataformat = "<f" ## For old packings with little endian floating point data. Use <d for new ones
         self.beads = []
         arr = bin_to_arr(self.fname, self.dataformat)
@@ -90,6 +109,9 @@ class PackedBed:
         return [ b.tag for b in self.beads ]
 
     def write(self, filename, dataformat='<d'):
+        """
+        Output the current packed bed into a binary file (xyzd)
+        """
         with(open(filename, 'wb')) as output:
             for bead in self.beads:
                 output.write(struct.pack(dataformat,bead.x))
@@ -113,10 +135,14 @@ class PackedBed:
         self.rmax = max(radList)
         self.rmin = min(radList)
         self.ravg = sum(radList)/len(self.beads)
+        self.nBeads = len(radList)
 
         self.R = max((self.xmax-self.xmin)/2, (self.ymax-self.ymin)/2) ## Similar to Genmesh
         self.h = self.zmax - self.zmin
         self.CylinderVolume = np.pi * self.R**2 * self.h
+
+    def volume(self): 
+        return sum([b.volume() for b in self.beads])
 
     def moveBedtoCenter(self):
         """
@@ -494,3 +520,54 @@ class PackedBed:
 
         factory.synchronize()
 
+    def print_bounds(self): 
+        dic = {
+                'xmin': self.xmin,
+                'xmax': self.xmax,
+                'ymin': self.ymin,
+                'ymax': self.ymax,
+                'zmin': self.zmin,
+                'zmax': self.zmax,
+                'rmin': self.rmin,
+                'rmax': self.rmax,
+                'ravg': self.ravg,
+                'R': self.R,
+                'h': self.h,
+                'volume': self.volume()
+                }
+        self.logger.print(dic)
+
+    def prune_to_volume(self, target_volume:float, eps:float = 1e-3): 
+        """
+        Prune packed bed of beads to reach a target volume
+        """
+        self.updateBounds()
+
+        if self.volume() < target_volume: 
+            self.logger.die("Cannot prune packed bed! current volume < target volume")
+
+        delta_volume = self.volume() - target_volume
+
+        self.logger.out(f"{self.volume() = }")
+        self.logger.out(f"{target_volume = }")
+        self.logger.out(f"{delta_volume = }")
+
+        while delta_volume > eps: 
+
+            del_zone_beads = list(filter(lambda b: b.z < self.zmin + self.rmax, self.beads)) + list(filter(lambda b: b.z > self.zmax - self.rmax, self.beads)) 
+            print(f"{len(del_zone_beads) = }")
+            out = min(del_zone_beads, key=lambda b: abs(b.volume() - delta_volume))
+
+            self.beads.remove(out)
+
+            self.logger.print(f"Deleting bead {out} with volume = {out.volume()}")
+
+            self.updateBounds()
+            delta_volume = self.volume() - target_volume
+
+        self.logger.out(f"{self.volume() = }")
+        self.logger.out(f"{target_volume = }")
+        self.logger.out(f"{delta_volume = }")
+        self.logger.out(f"{self.nBeads = }")
+        self.updateBounds()
+        self.print_bounds()

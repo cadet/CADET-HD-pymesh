@@ -80,6 +80,7 @@ class ConfigHandler:
         self.packedbed_scaling_factor            = self.get('packedbed.scaling_factor', 1.0, float)
         self.packedbed_particles_scaling_factor  = self.get('packedbed.particles.scaling_factor', 1.0, float)
         self.packedbed_auto_translate            = self.get('packedbed.auto_translate', False, bool)
+        self.packedbed_target_volume             = self.get('packedbed.target_volume', 0.0, float)
 
         self.container_shape                     = self.get('container.shape', '', vartype=str(), choices = ['box', 'cylinder', ''])
         self.container_size                      = self.get('container.size', [], vartype=list)
