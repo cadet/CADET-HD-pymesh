@@ -118,11 +118,9 @@ class GenericModel:
         basename = Path(self.fname).stem
         extension = Path(self.fname).suffix
 
-        # # This is almost never used in practice
-        # self.logger.out("Writing full mesh")
-        # gmsh.write(self.fname)
-
         if not self.container_shape:
+            self.logger.out("Writing full mesh")
+            gmsh.write(self.fname)
             return
 
         self.column.write(basename + '_column' + extension, fragmentFormat=self.fragment_format)
