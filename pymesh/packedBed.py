@@ -425,7 +425,7 @@ class PackedBed:
         self.beads.extend(stacked_beads)
         self.generate()
 
-    def copy_mesh(self, nodeTagsOffset, elementTagsOffset): 
+    def copy_mesh(self, nodeTagsOffset, elementTagsOffset, dim=3): 
         """
         Generate a reference sphere volume mesh and copy it to create a full packed bed.
 
@@ -437,8 +437,8 @@ class PackedBed:
 
         self.set_threshold_for_reference_mesh()
 
-        gmsh.model.mesh.generate(3)
-        m, ntoffdelta, etoffdelta= store_mesh(3)
+        gmsh.model.mesh.generate(dim)
+        m, ntoffdelta, etoffdelta= store_mesh(dim)
 
         gmsh.model.setCurrent(current_model)
 
