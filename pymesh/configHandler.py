@@ -91,6 +91,10 @@ class ConfigHandler:
         self.container_outlet_length             = self.get('container.outlet_length', 0.0, float)
         self.container_end_face_sections         = self.get('container.end_face_sections', 1, int)
 
+        self.mesh_method                         = self.get('mesh.method', 'generic', str(), choices = ['generic', 'copymesh'])
+        if self.mesh_method == 'copymesh': 
+            self.mesh_copymesh_ref_dim = self.get('mesh.copymesh_ref_dim', 3, int, choices=[2,3])
+
         self.mesh_size_method                    = self.get('mesh.size_method', 'global', str(), ['global', 'field'])
         self.mesh_size                           = self.get('mesh.size', 0.2, float)
         self.mesh_field_threshold_size_in        = self.get('mesh.field.threshold.size_in', self.mesh_size, float)

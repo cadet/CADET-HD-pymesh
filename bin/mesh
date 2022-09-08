@@ -37,9 +37,9 @@ def pymesh():
         config.set_gmsh_defaults()
         config.set_gmsh_options()
 
-        if config.get('mesh.method') == 'generic': 
+        if config.mesh_method == 'generic': 
             defaultModel = GenericModel(config)
-        elif config.get('mesh.method') == 'copymesh':  
+        elif config.mesh_method == 'copymesh':  
             defaultModel = CopyMeshModel(config)
         else: 
             logger.die(f"Invalid mesh.method: {config.get('mesh.method')}")
