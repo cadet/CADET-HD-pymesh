@@ -21,6 +21,7 @@ container:
   end_face_sections: 5
 mesh:
   method: generic or copymesh
+  copymesh_ref_dim: 3
   size: 0.2
   sizeout: 0.2
   sizein: 0.2
