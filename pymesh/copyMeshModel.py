@@ -45,6 +45,8 @@ class CopyMeshModel:
 
         self.fragment_format       = config.output_fragment_format if config.output_fragment_format[0] == '.' else f".{config.output_fragment_format}"
 
+        self.copymesh_ref_dim      = config.mesh_copymesh_ref_dim
+
         ntoff = 0
         etoff = 0
 
@@ -52,7 +54,7 @@ class CopyMeshModel:
             self.logger.die("Box containers not implemented with copymesh.")
 
         self.packedBed = PackedBed(config, generate=False)
-        ntoff, etoff = self.packedBed.copy_mesh(ntoff, etoff)
+        ntoff, etoff = self.packedBed.copy_mesh(ntoff, etoff, dim=self.copymesh_ref_dim)
 
         if not config.container_shape:
             return
