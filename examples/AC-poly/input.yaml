@@ -1,0 +1,56 @@
+packedbed:
+  packing_file:
+    filename: /home/jayghoshter/dev/tools-old/genmesh/packing/poly-full.xyzd
+    dataformat: <f
+  nbeads: -1
+  zbot: 70.0 
+  ztop: 225.0
+  scaling_factor: 2.1244954
+  auto_translate: True
+  target_volume: 7242.702702710104
+  particles:
+    scaling_factor: 0.9997
+    # modification: bridge | cut 
+    # relative_bridge_radius: ...
+container:
+  shape: cylinder
+  size: [ 0.0, 0.0, -2.5, 0.0, 0.0, 160, 5.01 ]
+  # size: [-2, -2, 0, 4, 4, 4]
+  # periodicity: 
+  # linked: True
+  # stack_method: planecut
+  # inlet_length: 0.0
+  # outlet_length: 0.0
+  # end_face_sections: 5
+mesh:
+  # size: 0.08
+  method: copymesh
+  size_method: field
+  field:
+    threshold:
+      size_out: 0.03
+      rad_max_factor: 0.95
+      size_in: 0.10
+      rad_min_factor: 0.85
+    interstitial_surface_threshold:
+      size_on: 0.03
+      size_away: 0.08
+      dist_min: 0.1
+      dist_max: 0.20
+  algorithm: 5
+  algorithm3D: 10
+  generate: 3
+output:
+  filename: mesh.msh2
+gmsh:
+  General.Verbosity: 99
+  Geometry.OCCParallel: 1
+  General.NumThreads: 60
+  Mesh.MaxNumThreads1D: 60
+  Mesh.MaxNumThreads2D: 60
+  Mesh.MaxNumThreads3D: 60
+  Mesh.ScalingFactor: 0.0001
+  Mesh.Optimize: 0
+general:
+  improved_bbox_calc: False
+  fragment: True
