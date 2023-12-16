@@ -79,6 +79,7 @@ class ConfigHandler:
         self.packedbed_ztop                      = self.get('packedbed.ztop', 0.0, float)
         self.packedbed_scaling_factor            = self.get('packedbed.scaling_factor', 1.0, float)
         self.packedbed_particles_scaling_factor  = self.get('packedbed.particles.scaling_factor', 1.0, float)
+        self.packedbed_particles_radius_lower_threshold = self.get('packedbed.particles.radius_lower_threshold', 0.0, float)
         self.packedbed_auto_translate            = self.get('packedbed.auto_translate', False, bool)
         self.packedbed_target_volume             = self.get('packedbed.target_volume', 0.0, float)
 

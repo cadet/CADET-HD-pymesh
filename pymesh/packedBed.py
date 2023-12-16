@@ -41,6 +41,7 @@ class PackedBed:
         self.nBeads                              = config.packedbed_nbeads
         self.scaling_factor                      = config.packedbed_scaling_factor
         self.particles_scaling_factor            = config.packedbed_particles_scaling_factor
+        self.particles_radius_lower_threshold    = config.packedbed_particles_radius_lower_threshold
         self.auto_translate                      = config.packedbed_auto_translate
 
         # self.mesh_size                           = config.mesh_size
@@ -73,6 +74,12 @@ class PackedBed:
         Read packing data from a given xyzd file
         If nbeads < 0, read all particles in the packing, else only nbeads particles
         Scale packing and particle size by given factors
+
+        Polydisperse packings can have extremely small beads that 
+        don't contribute to the bed's capacity, and hinder mesh 
+        generation. This method should not add particles below a 
+        certain radius threshold. Threshold variable is compared 
+        to radius after all geometry scaling, but before mesh-scaling.
         """
         # dataformat = "<f" ## For old packings with little endian floating point data. Use <d for new ones
         self.beads = []
@@ -84,6 +91,8 @@ class PackedBed:
                     y = chunk[1] * self.scaling_factor
                     z = chunk[2] * self.scaling_factor
                     r = chunk[3]/2 * self.scaling_factor * self.particles_scaling_factor
+                    if r < self.particles_radius_lower_threshold:
+                        continue
                     self.beads.append(Bead(x, y, z, r))
         else:
             for index, chunk in enumerate(grouper(arr,4)):
@@ -93,10 +102,11 @@ class PackedBed:
                 y = chunk[1] * self.scaling_factor
                 z = chunk[2] * self.scaling_factor
                 r = chunk[3]/2 * self.scaling_factor * self.particles_scaling_factor
+                if r < self.particles_radius_lower_threshold:
+                    continue
                 self.beads.append(Bead(x, y, z, r))
 
         self.logger.out(f"Found {len(self.beads)} beads")
-
 
     @property
     def dimTags(self):

@@ -10,6 +10,7 @@ packedbed:
   target_volume: 7242.702702710104
   particles:
     scaling_factor: 0.9997
+    radius_lower_threshold: 0.215
     # modification: bridge | cut 
     # relative_bridge_radius: ...
 container:

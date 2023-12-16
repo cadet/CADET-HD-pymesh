@@ -54,6 +54,7 @@ class CopyMeshModel:
             self.logger.die("Box containers not implemented with copymesh.")
 
         self.packedBed = PackedBed(config, generate=False)
+        self.packedBed.write('beads_used.xyzd')
         ntoff, etoff = self.packedBed.copy_mesh(ntoff, etoff, dim=self.copymesh_ref_dim)
 
         if not config.container_shape:
