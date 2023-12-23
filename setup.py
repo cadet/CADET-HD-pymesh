@@ -36,7 +36,7 @@ URL = 'https://jugit.fz-juelich.de/IBG-1/ModSim/Chroma-HD/pymesh'
 EMAIL = 'j.rao@fz-juelich.de'
 AUTHOR = 'Jayghosh Rao'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = git_version()
+VERSION = '0.1'
 
 # print(git_version())
 # print(VERSION)
