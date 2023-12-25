@@ -25,10 +25,11 @@
       ];
 
       cmakeFlags = [
-        "-DCMAKE_BUILD_TYPE=Debug"
+        "-DCMAKE_BUILD_TYPE=Release"
         "-DENABLE_BUILD_LIB=1"
         "-DENABLE_BUILD_SHARED=1"
         "-DENABLE_BUILD_DYNAMIC=1"
+        "-DENABLE_OPENMP=1"
       ];
     });
 
