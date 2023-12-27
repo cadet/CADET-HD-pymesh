@@ -5,10 +5,14 @@ A mesher for 3D chromatography columns.
 """
 
 import pathlib
-import git
 
 def git_version():
     """ Return version with local version identifier. """
+    try:
+        import git
+    except ImportError:
+        return None
+
     try: 
         path = pathlib.Path(__file__).parent.resolve()
         repo = git.Repo(path, search_parent_directories=True)
