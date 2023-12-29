@@ -543,10 +543,14 @@ class PackedBed:
                 'zmax': self.zmax,
                 'rmin': self.rmin,
                 'rmax': self.rmax,
+                'xdelta': self.xmax - self.xmin,
+                'ydelta': self.ymax - self.ymin,
+                'zdelta': self.zmax - self.zmin,
                 'ravg': self.ravg,
                 'R': self.R,
                 'h': self.h,
-                'volume': self.volume()
+                'volume': self.volume(),
+                'surface_area': self.surface_area()
                 }
         self.logger.print(dic)
 
