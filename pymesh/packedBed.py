@@ -569,7 +569,7 @@ class PackedBed:
         self.logger.out(f"{target_volume = }")
         self.logger.out(f"{delta_volume = }")
 
-        while delta_volume > eps: 
+        while delta_volume/target_volume > eps: 
 
             del_zone_beads = list(filter(lambda b: b.z < self.zmin + self.rmax, self.beads)) + list(filter(lambda b: b.z > self.zmax - self.rmax, self.beads)) 
             print(f"{len(del_zone_beads) = }")
