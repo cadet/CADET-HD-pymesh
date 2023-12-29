@@ -29,6 +29,14 @@ class Container:
         self.size     = size
         self.logger   = logger
 
+        if self.shape == 'box':
+            self.dx = self.size[3]
+            self.dy = self.size[4]
+            self.dz = self.size[5]
+        elif self.shape == 'cylinder':
+            self.dr = self.size[6]
+            self.dz = self.size[5]
+
         self.entities = []
         if generate: 
             self.generate()
@@ -39,14 +47,9 @@ class Container:
         """
         if self.shape == 'box':
             self.entities.append(factory.addBox(*self.size))
-            self.dx = self.size[3]
-            self.dy = self.size[4]
-            self.dz = self.size[5]
         elif self.shape == 'cylinder':
             self.logger.warn("Support for cylindrical containers is minimal!")
             self.entities.append(factory.addCylinder(*self.size))
-            self.dr = self.size[6]
-            self.dz = self.size[5]
 
     @property
     def dimTags(self):
