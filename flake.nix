@@ -44,6 +44,7 @@
 
           propagatedBuildInputs = with pkgs; [
             python39
+            python3Packages.pip
             python3Packages.numpy
             python3Packages.rich
             python3Packages.ruamel-yaml
@@ -65,6 +66,7 @@
 
           propagatedBuildInputs = with pkgs; [
             python39
+            python3Packages.pip
             python3Packages.numpy
             python3Packages.rich
             python3Packages.ruamel-yaml
