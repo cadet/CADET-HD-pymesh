@@ -1,0 +1,314 @@
+#!/usr/bin/env python3
+
+"""
+pack-inspect: Inspect packings using the same input.yaml as the mesh generator, and print geometry information relevant to cadet simulations such as par_type_volfrac and porosities for 1D, 2D, PSD, NoPSD.
+
+Merged functions from pack.py script where a lot of the functionality was getting duplicated. That script is now deprecated.
+"""
+
+from pymesh import ConfigHandler, Logger
+from pymesh.packedBed import PackedBed
+from pymesh.container import Container
+
+from types import SimpleNamespace
+from rich import print
+from rich.pretty import pprint
+
+import argparse
+import numpy as np
+
+from math import asin,sqrt,pi
+from mpmath import ellipk, ellipe, ellipf, nstr
+from multiprocessing import Pool
+from functools import partial
+
+import json
+from ruamel.yaml import YAML
+from pathlib import Path
+yaml = YAML(typ='safe')
+
+def CylSphIntVolume(rho, eta):
+    """ Analytical Formulae to calculate intersection between cylinder and sphere.
+        See http://dx.doi.org/10.1016/s1385-7258(61)50049-2 for more info.
+    """
+    if rho == 0.0:
+        return 0
+    elif (eta - rho) <= -1:
+        return 4/3 * pi
+    elif (eta - rho) >= 1:
+        return 0
+
+    ## NOTE: Ideally eta & rho are floats & never equal. But test cases are not handled yet. Similarly rho+eta == 1
+    if eta == rho:
+        print("Rho & Eta are Equal")
+
+    if eta == 0 and 0 <= rho <= 1:
+        V = 4/3 * pi - 4/3 * pi * (1 - rho**2)**(3/2)
+        return V
+    elif (rho + eta > 1):
+        nu = asin(eta - rho)
+        m = (1-(eta - rho)**2)/(4*rho*eta)
+
+        K = ellipk(m)
+        E = ellipe(m)
+
+        F = ellipf(nu ,1-m)
+        Ep = ellipe(nu, 1-m)
+
+        L0 = 2/pi * (E * F + K * Ep - K * F )
+
+        # V = (2/3 * pi * ( 1 - L0(nu, m) ) )\
+        V = (2/3 * pi * ( 1 - L0 ) )\
+        - (8/9 * sqrt(rho * eta) * (6 * rho**2 + 2 * rho * eta - 3) * (1 - m) * K)\
+        + (8/9 * sqrt(rho * eta) * (7 * rho**2 + eta**2 - 4) * E)
+
+        return V
+
+    elif (rho + eta < 1):
+        nu = asin((eta - rho)/(eta + rho))
+        m = 4*rho*eta / (1 - (eta-rho)**2)
+        K = ellipk(m)
+        E = ellipe(m)
+        F = ellipf(nu ,1-m)
+        Ep = ellipe(nu, 1-m)
+        L0 = 2/pi * (E * F + K * Ep - K * F )
+
+        V = (2/3 * pi * ( 1 - L0 ))\
+        - (4 * sqrt(1 - (eta-rho)**2) / (9*(eta+rho)) ) * (2*rho - 4*eta + (eta+rho)*(eta-rho)**2) * (1-m) * K\
+        + (4/9 * sqrt(1 - (eta-rho)**2) * (7*rho**2 + eta**2 - 4) * E)
+
+        return V
+
+    else:
+        print("ERROR")
+        return 0
+
+def volShellRegion(beads, rShells, i):
+    """
+    Find the intersection volumes between rShells[i] & rShells[i+1]
+
+    @input: beads, shell_radii, index of shell
+    @output:
+        - total volume of all particles within the i'th shell
+        - list of all radii based on intersected volumes.
+
+    """
+    volShell=0
+    radsShell=[]
+    for bead in beads:
+        volBead = volBeadSlice(bead, rShells[i], rShells[i+1])
+        volShell = volShell + volBead
+        radBead = pow(volBead/(4.0/3.0*pi), 1.0/3.0)
+        if radBead != 0:
+            radsShell.append(radBead)
+    return volShell, radsShell
+
+# def radsShellRegion(beads, rShells, i):
+#     """
+#     In order to calculate histogram for beads in individual shells.
+#     > 1. Calculate Volumes of each bead in given shell,
+#     > 2. Extrapolate "radius" from each volume, even sliced ones.
+#     > 3. Return list of radii to be used by histo()
+#     """
+#     radsShell=[]
+#     for bead in beads:
+#         volBead = volBeadSlice(bead, rShells[i], rShells[i+1])
+#         radBead = pow(volBead/(4.0/3.0*pi), 1.0/3.0)
+#         radsShell.append(radBead)
+#     return radsShell
+
+def bridgeVolumes(beads, bridgeTol, relativeBridgeRadius, bridgeOffsetRatio):
+    """
+    Find the total volume of the bridges between beads
+    """
+    addedBridgeVol = 0
+    removedBridgeVol = 0
+    count = 0
+    beadsCopy = beads.copy()
+    for bead1 in beads:
+        beadsCopy.remove(bead1)
+        for bead2 in beadsCopy:
+            beadDistance = bead1.distance(bead2)
+            if beadDistance < bead1.r + bead2.r + bridgeTol:
+                count = count + 1
+                bridgeRadius = relativeBridgeRadius * min(bead1.r, bead2.r)
+                intVol1 = volBridgeSlice(bead1, bridgeRadius, bridgeOffsetRatio)
+                intVol2 = volBridgeSlice(bead2, bridgeRadius, bridgeOffsetRatio)
+                addedBridgeVol = addedBridgeVol + pi * bridgeRadius**2 * (beadDistance - bridgeOffsetRatio * bead1.r - bridgeOffsetRatio * bead2.r) - intVol1 - intVol2
+                removedBridgeVol = removedBridgeVol + intVol1 + intVol2
+                ## NOTE: Some beads will be intersecting due to single precision. That's not handled here.
+    print("Number of Bridges:", count)
+    return addedBridgeVol, removedBridgeVol
+
+def volBridgeSlice(bead, bridgeRadius, offsetRatio):
+    """
+    Volume of intersection between bridge and bead
+    """
+    rho = bridgeRadius/bead.r
+    # eta = bead.pos()/bead.r ##FIXME, eta == 0
+    eta = 0
+    vol = CylSphIntVolume(rho, eta) * bead.r**3
+    ## There's no need to find the accurate internal union volume since it will be deleted to find only the extra volume added by bridges in the first place.
+    vol = vol/2 - pi * bridgeRadius**2 * offsetRatio * bead.r
+    return vol
+
+def volBeadSlice(bead, rInnerShell, rOuterShell):
+    """
+    Find intersection volume of an individual bead between two shells (cylinders)
+    """
+    rhoOuter = rOuterShell/bead.r
+    etaOuter = bead.pos_xy()/bead.r
+    volOuter = CylSphIntVolume(rhoOuter, etaOuter) * bead.r**3
+    rhoInner = rInnerShell/bead.r
+    etaInner = bead.pos_xy()/bead.r
+    volInner = CylSphIntVolume(rhoInner, etaInner) * bead.r**3
+    volIntBead = volOuter - volInner
+    return volIntBead
+
+def calculate_geometry_info(packedBed, container):
+    bed = SimpleNamespace(**packedBed.get_bounds())
+    column = SimpleNamespace(**container.get_bounds())
+
+    inlet_length = bed.zmin - column.zmin
+    outlet_length = column.zmax - bed.zmax
+    bed_length_ratio = bed.zdelta / column.zdelta 
+    column_porosity = 1 - bed.volume / column.volume
+    bed_porosity = 1 - bed.volume / (column.volume * bed_length_ratio)
+
+    particle_radius_avg = bed.ravg
+    particle_radius_min = bed.rmin
+    particle_radius_max = bed.rmax
+
+    data = {
+        'column_length': column.zdelta,
+        'inlet_length': inlet_length,
+        'outlet_length': outlet_length,
+        'bed_length': bed.zdelta,
+        'bed_length_ratio': bed_length_ratio,
+        'column_radius': column.R,
+        'bed_radius': bed.R,
+        'column_cross_section_area': column.cross_section_area,
+        'column_volume': column.volume,
+        'bed_volume': bed.volume,
+        'column_porosity' : column_porosity,
+        'bed_porosity': bed_porosity,
+        'particle_radius_min': particle_radius_min,
+        'particle_radius_avg': particle_radius_avg,
+        'particle_radius_max': particle_radius_max,
+    }
+
+    return data
+
+def main():
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("file", help="Input file")
+    ap.add_argument("-np", "--npartype", default=1, type=int, help="Number of bins to sort particles into.")
+    ap.add_argument("-nr", "--nrad", default=1, type=int, help="Number of radial zones.")
+    ap.add_argument("-st", "--shelltype", default='EQUIDISTANT', choices = ['EQUIDISTANT', 'EQUIVOLUME'], help="Radial discretization type")
+    args = ap.parse_args()
+
+    logger = Logger()
+
+    config = ConfigHandler(logger)
+    config.read(args.file)
+
+    packedBed = PackedBed(config, generate=False)
+    container = Container(config.container_shape, config.container_size, generate=False)
+
+    reference_scale_data = calculate_geometry_info(packedBed, container)
+
+    meshScalingFactor = config.get('gmsh').get('Mesh.ScalingFactor', 1.0)
+    packedBed.scale(meshScalingFactor)
+    container.scale(meshScalingFactor)
+
+    post_scale_data = calculate_geometry_info(packedBed, container)
+
+    data = process(packedBed, container, args.npartype, args.nrad)
+
+    alldata = {
+        'reference_scale_data': reference_scale_data,
+        'post_scale_data': post_scale_data,
+        'processed_results': data,
+    }
+
+    with open(Path(args.file + '_packing_processed.json'), 'w') as fp: 
+        json.dump(alldata, fp, indent=4)
+    # with open(Path(args.file + '_packing_processed.yaml'), 'w') as fp: 
+    #     yaml.dump(alldata, fp)
+
+def process(packedBed, container, npartype=1, nrad=1, shelltype='EQUIDISTANT'):
+
+    par_radii_all = [ b.r for b in packedBed.beads ] 
+    par_volumes_all = [ b.volume() for b in packedBed.beads ]
+
+    ## Dump into bins by weight of each bead's volume
+    ## h (height of histogram bar) is then a representation of
+    ## the volume of beads present at a certain radius (partype).
+    ## if density==true weights are normalized
+    volumes, bin_edges = np.histogram(par_radii_all, bins=npartype, weights=par_volumes_all)
+    volume_fractions=[x/sum(volumes) for x in volumes]
+    ## Find means of each bin from the edges
+    bin_mean_radii = list(np.convolve(bin_edges, np.ones(2), 'valid') / 2)
+
+
+    nRegions = nrad
+    nShells = nRegions + 1 #Including r = 0
+    rShells = []
+
+    column_radius = container.r
+
+    if shelltype == 'EQUIVOLUME':
+        for n in range(nShells):
+            rShells.append(column_radius * sqrt(n/nRegions))
+    elif shelltype == 'EQUIDISTANT':
+        for n in range(nShells):
+            rShells.append(column_radius * (n/nRegions))
+
+    total_beads_volume_per_shell = [0] * nRegions
+
+    ## Multiprocessing code.
+    ##      Create a partial function of volShellRegion(beads, rShells, i) --> parfunc(i)
+    ##      map each 'i' to each process
+    pool = Pool()
+    parfunc = partial(volShellRegion, packedBed.beads, rShells)
+    # volRegions = pool.map(parfunc, range(nRegions))
+    total_beads_volume_per_shell, radii_beads_per_shell = zip(*pool.map(parfunc, range(nRegions)))
+    pool.close()
+    pool.join()
+
+    total_beads_volume_per_shell = np.array(total_beads_volume_per_shell).astype(np.float64)
+    radii_beads_per_shell = [ np.array(item).astype(np.float64) for item in radii_beads_per_shell ]
+
+    bed_length = packedBed.zdelta
+    column_length = container.zdelta
+
+    volCylRegions_bed = [pi * bed_length * (rShells[i+1]**2 - rShells[i]**2) for i in range(nRegions)]
+    volCylRegions_column = [pi * column_length * (rShells[i+1]**2 - rShells[i]**2) for i in range(nRegions)]
+
+    porosities_bed = [ float(1-n/m) for n,m in zip(total_beads_volume_per_shell, volCylRegions_bed) ]
+    porosities_column = [ float(1-n/m) for n,m in zip(total_beads_volume_per_shell, volCylRegions_column) ]
+
+    # avg_shell_radii = [ (rShells[i] + rShells[i+1])/2 for i in range(nRegions) ]
+
+    ## Get histogram data: volume fractions and radii, for each shell
+    ## bin_radii is the list of mean bin radii for each shell, which is set to bin_edges
+    volFracs = []
+    for rads in radii_beads_per_shell:
+        V=[4*np.pi*x*x*x/3 for x in rads]
+        volumes, bin_edges = np.histogram([float(x) for x in rads], bins=bin_edges, weights=V)
+        volFrac=[x/sum(volumes) for x in volumes]
+        volFracs.extend(volFrac)
+
+    data = {
+        'par_radius': bin_mean_radii,
+        'bed_porosity': porosities_bed,
+        'column_porosity': porosities_column,
+        'par_type_volfrac_1d': volume_fractions,
+        'part_type_volfrac_2d': volFracs,
+    }
+
+    return data
+
+if __name__ == "__main__":
+    main()
