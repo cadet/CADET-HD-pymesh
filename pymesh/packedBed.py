@@ -554,7 +554,7 @@ class PackedBed:
                 'surface_area': self.surface_area()
                 }
 
-    def prune_to_volume(self, target_volume:float, eps:float = 1e-3): 
+    def prune_to_volume(self, target_volume:float, eps:float = 1e-6): 
         """
         Prune packed bed of beads to reach a target volume
         """
