@@ -46,6 +46,9 @@ class Bead:
     def volume(self):
         return 4/3 * np.pi * self.r**3
 
+    def surface_area(self):
+        return 4 * np.pi * self.r**2
+
     def distance(self, other):
         return np.sqrt((self.x-other.x)**2 + (self.y-other.y)**2 + (self.z-other.z)**2)
 

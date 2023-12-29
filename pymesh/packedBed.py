@@ -154,6 +154,9 @@ class PackedBed:
     def volume(self): 
         return sum([b.volume() for b in self.beads])
 
+    def surface_area(self):
+        return sum([b.surface_area() for b in self.beads])
+
     def moveBedtoCenter(self):
         """
         Translate bed bottom center to origin of coordinate system.
