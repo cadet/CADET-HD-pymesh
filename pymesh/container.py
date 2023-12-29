@@ -155,3 +155,18 @@ class Container:
         field.setNumbers(bftag, "FieldsList", ctags);
         field.setAsBackgroundMesh(bftag);
 
+
+    def scale(self, factor, cx = 0.0, cy = 0.0, cz = 0.0):
+        object.__setattr__(self, 'x', (self.x - cx) * factor)
+        object.__setattr__(self, 'y', (self.y - cy) * factor)
+        object.__setattr__(self, 'z', (self.z - cz) * factor)
+        object.__setattr__(self, 'dx', (self.dx) * factor)
+        object.__setattr__(self, 'dy', (self.dy) * factor)
+        object.__setattr__(self, 'dz', (self.dz) * factor)
+        object.__setattr__(self, 'r', (self.r) * factor)
+        self.update_bounds()
+
+        for tag in self.entities:
+            # WARNING: Untested
+            gmsh.model.occ.dilate([(3, tag)], cx, cy, cz, factor, factor, factor)
+

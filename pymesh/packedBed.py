@@ -588,3 +588,8 @@ class PackedBed:
         self.logger.out(f"{self.nBeads = }")
         self.updateBounds()
         self.print_bounds()
+
+    def scale(self, factor, cx = 0.0, cy = 0.0, cz = 0.0):
+        for bead in self.beads:
+            bead.scale(factor, cx, cy, cz)
+        self.updateBounds()

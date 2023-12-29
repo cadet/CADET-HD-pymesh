@@ -66,8 +66,6 @@ class Bead:
         if self.tag != -1:
             gmsh.model.occ.translate([(3,self.tag)], dx, dy, dz)
 
-        return self
-
     def set_ctag(self, ictag):
         object.__setattr__(self, 'ctag', ictag)
 
@@ -82,3 +80,18 @@ class Bead:
     @property
     def rightCardinalBounds(self):
         return self.x+self.r, self.y+self.r, self.z+self.r
+
+    def scale_in_place(self, factor):
+        object.__setattr__(self, 'r', self.r * factor)
+
+        if self.tag != -1:
+            gmsh.model.occ.dilate([(3,self.tag)], self.x, self.y, self.z, factor, factor, factor)
+
+    def scale(self, factor, cx = 0.0, cy = 0.0, cz = 0.0):
+        object.__setattr__(self, 'x', (self.x - cx) * factor)
+        object.__setattr__(self, 'y', (self.y - cy) * factor)
+        object.__setattr__(self, 'z', (self.z - cz) * factor)
+        object.__setattr__(self, 'r', self.r * factor)
+
+        if self.tag != -1:
+            gmsh.model.occ.dilate([(3,self.tag)], cx, cy, cz, factor, factor, factor)
