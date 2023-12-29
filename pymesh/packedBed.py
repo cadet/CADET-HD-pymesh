@@ -149,6 +149,7 @@ class PackedBed:
 
         self.R = max((self.xmax-self.xmin)/2, (self.ymax-self.ymin)/2) ## Similar to Genmesh
         self.h = self.zmax - self.zmin
+        self.zdelta = self.zmax - self.zmin
         self.CylinderVolume = np.pi * self.R**2 * self.h
 
     def volume(self): 
