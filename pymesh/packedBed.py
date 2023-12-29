@@ -59,7 +59,7 @@ class PackedBed:
             self.moveBedtoCenter()
 
         self.updateBounds()
-        self.print_bounds()
+        self.logger.print(self.get_bounds())
 
         if self.target_volume > 0.0: 
             self.prune_to_volume(self.target_volume)
@@ -533,8 +533,8 @@ class PackedBed:
 
         factory.synchronize()
 
-    def print_bounds(self): 
-        dic = {
+    def get_bounds(self): 
+        return {
                 'xmin': self.xmin,
                 'xmax': self.xmax,
                 'ymin': self.ymin,
@@ -552,7 +552,6 @@ class PackedBed:
                 'volume': self.volume(),
                 'surface_area': self.surface_area()
                 }
-        self.logger.print(dic)
 
     def prune_to_volume(self, target_volume:float, eps:float = 1e-3): 
         """
@@ -587,7 +586,7 @@ class PackedBed:
         self.logger.out(f"{delta_volume = }")
         self.logger.out(f"{self.nBeads = }")
         self.updateBounds()
-        self.print_bounds()
+        self.logger.print(self.get_bounds())
 
     def scale(self, factor, cx = 0.0, cy = 0.0, cz = 0.0):
         for bead in self.beads:

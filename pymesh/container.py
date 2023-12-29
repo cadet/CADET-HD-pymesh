@@ -11,7 +11,7 @@ Container class.
 """
 
 import gmsh
-import sys
+from math import pi as PI
 
 from pymesh.log import Logger
 from pymesh.tools import store_mesh, copy_mesh
@@ -30,12 +30,12 @@ class Container:
         self.logger   = logger
 
         if self.shape == 'box':
-            self.dx = self.size[3]
-            self.dy = self.size[4]
-            self.dz = self.size[5]
+            self.x, self.y, self.z, self.dx, self.dy, self.dz = self.size
         elif self.shape == 'cylinder':
-            self.dr = self.size[6]
-            self.dz = self.size[5]
+            self.x, self.y, self.z, self.dx, self.dy, self.dz, self.r = self.size
+
+        self.update_bounds()
+        self.logger.print(self.get_bounds())
 
         self.entities = []
         if generate: 
@@ -155,6 +155,44 @@ class Container:
         field.setNumbers(bftag, "FieldsList", ctags);
         field.setAsBackgroundMesh(bftag);
 
+    def update_bounds(self):
+        if self.shape == 'box':
+            self.xdelta = self.dx
+            self.ydelta = self.dy
+            self.zdelta = self.dz
+            self.volume = self.dx * self.dy * self.dz
+            self.cross_section_area = self.dx * self.dy
+        elif self.shape == 'cylinder':
+            self.xdelta = self.r * 2
+            self.ydelta = self.r * 2
+            self.zdelta = self.dz
+            self.volume = PI * self.r**2 * self.dz
+            self.cross_section_area = PI * self.r**2
+
+        self.xmin = min(self.x, self.x + self.dx)
+        self.xmax = max(self.x, self.x + self.dx)
+        self.ymin = min(self.y, self.y + self.dy)
+        self.ymax = max(self.y, self.y + self.dy)
+        self.zmin = min(self.z, self.z + self.dz)
+        self.zmax = max(self.z, self.z + self.dz)
+
+    def get_bounds(self): 
+        return {
+            'shape': self.shape,
+            'size': self.size,
+            'xmin': self.xmin,
+            'xmax': self.xmax,
+            'ymin': self.ymin,
+            'ymax': self.ymax,
+            'zmin': self.zmin,
+            'zmax': self.zmax,
+            'xdelta': self.xdelta,
+            'ydelta': self.ydelta,
+            'zdelta': self.zdelta,
+            'R': self.r,
+            'cross_section_area': self.cross_section_area,
+            'volume': self.volume,
+        }
 
     def scale(self, factor, cx = 0.0, cy = 0.0, cz = 0.0):
         object.__setattr__(self, 'x', (self.x - cx) * factor)
