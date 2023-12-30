@@ -52,6 +52,7 @@
             python3Packages.ruamel-yaml
             python3Packages.GitPython
             python3Packages.setuptools
+            python3Packages.mpmath
             gmsh_with_libs
           ];
 
@@ -70,6 +71,7 @@
             python3Packages.ruamel-yaml
             python3Packages.GitPython
             python3Packages.setuptools
+            python3Packages.mpmath
             gmsh_with_libs
           ];
 
