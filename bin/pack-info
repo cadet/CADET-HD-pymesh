@@ -216,6 +216,9 @@ def main():
     packedBed = PackedBed(config, generate=False)
     container = Container(config.container_shape, config.container_size, generate=False)
 
+    if config.general_center_bed_in_container:
+        packedBed.center_bed_in_bounds(container.get_bounds())
+
     reference_scale_data = calculate_geometry_info(packedBed, container)
 
     meshScalingFactor = config.get('gmsh').get('Mesh.ScalingFactor', 1.0)
