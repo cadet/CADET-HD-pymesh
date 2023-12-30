@@ -46,6 +46,7 @@ class CopyMeshModel:
         self.fragment_format       = config.output_fragment_format if config.output_fragment_format[0] == '.' else f".{config.output_fragment_format}"
 
         self.copymesh_ref_dim      = config.mesh_copymesh_ref_dim
+        self.center_bed_in_container = config.general_center_bed_in_container
 
         ntoff = 0
         etoff = 0
@@ -55,12 +56,16 @@ class CopyMeshModel:
 
         self.packedBed = PackedBed(config, generate=False)
         self.packedBed.write('beads_used.xyzd')
-        ntoff, etoff = self.packedBed.copy_mesh(ntoff, etoff, dim=self.copymesh_ref_dim)
 
         if not config.container_shape:
             return
 
         column_container = Container(self.container_shape, self.container_size, generate=False)
+
+        if self.center_bed_in_container:
+            self.packedBed.center_bed_in_bounds(column_container.get_bounds())
+
+        ntoff, etoff = self.packedBed.copy_mesh(ntoff, etoff, dim=self.copymesh_ref_dim)
         ntoff, etoff = column_container.copy_mesh(ntoff, etoff, config)
         # container_shell = column_container.generate_shell()
 

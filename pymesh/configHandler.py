@@ -112,6 +112,7 @@ class ConfigHandler:
         self.general_improved_bbox_calc          = self.get('general.improved_bbox_calc', False)
         self.general_fragment                    = self.get('general.fragment', True, bool)
         self.general_nproc                       = self.get('general.nproc', 1, int)
+        self.general_center_bed_in_container     = self.get('general.center_bed_in_container', False, bool)
 
     def set_gmsh_defaults(self):
 

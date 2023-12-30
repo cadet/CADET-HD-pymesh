@@ -38,15 +38,22 @@ class GenericModel:
         self.mesh_size             = config.mesh_size
         self.mesh_size_method      = config.mesh_size_method
         self.mesh_generate         = config.mesh_generate
+        self.center_bed_in_container = config.general_center_bed_in_container
 
         self.fragment_format       = config.output_fragment_format if config.output_fragment_format[0] == '.' else f".{config.output_fragment_format}"
 
-        self.packedBed = PackedBed(config)
+        self.packedBed = PackedBed(config, generate=False)
 
         if not config.container_shape:
             return
 
-        column_container = Container(self.container_shape, self.container_size)
+        column_container = Container(self.container_shape, self.container_size, generate=False)
+
+        if self.center_bed_in_container:
+            self.packedBed.center_bed_in_bounds(column_container.get_bounds())
+
+        self.packedBed.generate()
+        column_container.generate()
 
         ## NOTE: Column periodicity is taken directly from input. If linked=True, ensure that column is periodic in Z
         ## inlet and outlet periodicity ignores Z, always

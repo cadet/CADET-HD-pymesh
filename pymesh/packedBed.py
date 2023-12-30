@@ -18,6 +18,7 @@ from pymesh.tools import add_nodes_multi, add_elements_multi
 import struct
 import numpy as np
 import gmsh
+from types import SimpleNamespace
 
 from itertools import combinations
 
@@ -166,8 +167,19 @@ class PackedBed:
         offsetx = -(self.xmax + self.xmin)/2
         offsety = -(self.ymax + self.ymin)/2
         offsetz = -(self.bound_zbot)
+        self.translate(offsetx, offsety, offsetz)
+
+    def center_bed_in_bounds(self, bContainerDict: dict):
+        bContainer = SimpleNamespace(**bContainerDict)
+        bPackedBed = SimpleNamespace(**self.get_bounds())
+        dx = (bContainer.xmax + bContainer.xmin - bPackedBed.xmax - bPackedBed.xmin) / 2.0
+        dy = (bContainer.ymax + bContainer.ymin - bPackedBed.ymax - bPackedBed.ymin) / 2.0
+        dz = (bContainer.zmax + bContainer.zmin - bPackedBed.zmax - bPackedBed.zmin) / 2.0
+        self.translate(dx, dy, dz)
+
+    def translate(self, xOff=0.0, yOff=0.0, zOff=0.0):
         for bead in self.beads:
-            bead.translate(offsetx, offsety, offsetz)
+            bead.translate(xOff, yOff, zOff)
         self.updateBounds()
 
     def generate(self):
