@@ -227,6 +227,7 @@ def main():
     data = process(packedBed, container, args.npartype, args.nrad)
 
     alldata = {
+        'nbeads': packedBed.nBeads,
         'reference_scale_data': reference_scale_data,
         'post_scale_data': post_scale_data,
         'processed_results': data,
