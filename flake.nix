@@ -6,7 +6,9 @@
   flake-utils.lib.eachDefaultSystem (system:
   let 
     pkgs = nixpkgs.legacyPackages.${system}; 
-    # dir = ''/home/jayghoshter/dev/tools/pymesh/'';
+
+    # builtins.toString still makes a nix store path for purity
+    PROJECT_ROOT = builtins.toString ./.;
 
     ## GMSH override to build and install lib files
     ## Can also be placed in ~/.nixpkgs/config.nix
@@ -60,10 +62,6 @@
         devShell = pkgs.mkShell rec {
           name = "pymesh";
 
-          # buildInputs = [
-          #   # pymesh
-          # ];
-
           propagatedBuildInputs = with pkgs; [
             python39
             python3Packages.pip
@@ -75,15 +73,18 @@
             gmsh_with_libs
           ];
 
+          # Allows editing the source code from within the devShell while still having access
+          # to libs and scripts in PATHs. PROJECT_ROOT being a variable ensures that we can 
+          # run this flake from any directory.
           shellHook = ''
             # Tells pip to put packages into $PIP_PREFIX instead of the usual locations.
             # See https://pip.pypa.io/en/stable/user_guide/#environment-variables.
-            export PIP_PREFIX=$(pwd)/_build/pip_packages
+            export PIP_PREFIX=$HOME/.cache/nix_pip_packages
             export PYTHONPATH="$PIP_PREFIX/${pkgs.python3.sitePackages}:$PYTHONPATH"
             export PYTHONPATH="${gmsh_with_libs}/lib:$PYTHONPATH"
-            export PYTHONPATH="$(pwd):$PYTHONPATH"
+            export PYTHONPATH="'' + PROJECT_ROOT + '':$PYTHONPATH"
             export PATH="$PIP_PREFIX/bin:$PATH"
-            export PATH="$(pwd)/bin:$PATH"
+            export PATH="'' + PROJECT_ROOT + ''/bin:$PATH"
             unset SOURCE_DATE_EPOCH
             '';
 
