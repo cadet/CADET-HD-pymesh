@@ -1,7 +1,7 @@
-packing:
-  file: 
-    name: packing.xyzd
-    type: binary 
+## WARNING: This example yaml file may be outdated. Please see configHandler.py.
+packedbed:
+  packing_file: 
+    filename: packing.xyzd
     dataformat: <d
   nbeads: 100
   zbot: 0.0
@@ -9,38 +9,45 @@ packing:
   scaling_factor: 1
   transform: 'auto'
   particles:
-    scale: True
     scaling_factor: 0.9997
-    bridge: False
 container:
-  shape: box
+  shape: box # or 'cylinder' or ''
   size: [ 0, 0, 0, 1, 1, 1]
-  inlet_length: 1.5
-  outlet_length: 1.5
-  periodicity: True
-  end_face_sections: 5
+  # inlet_length: 1.5
+  # outlet_length: 1.5
+  # periodicity: True
+  # end_face_sections: 5
 mesh:
-  method: generic or copymesh
-  copymesh_ref_dim: 3
+  method: generic # or 'copymesh'
+  # copymesh_ref_dim: 3
   size: 0.2
-  sizeout: 0.2
-  sizein: 0.2
+  size_method: global # or 'field'
   field:
     threshold:
-      rad_min_factor: 0.5
-      rad_max_factor: 0.5
-  reference_particle_radius: 'avg'
+      size_in: 0.08
+      size_out: 0.04
+      rad_min_factor: 0.4
+      rad_max_factor: 0.8
+    interstitial_surface_threshold: # for copymesh?
+      size_on: 0.06
+      size_away: 0.14
+      dist_min: 0.4
+      dist_max: 0.6
+  ref_radius: 'avg' # or 'max' or 'min'
   algorithm: 5
   algorithm3D: 10
   generate: 3
-  scaling_factor: 1e-4
 output:
   filename: mesh.vtk
-  fragments: True
-  generic: True
+  fragment_format: vtk
   particles: True
 gmsh:
+  General.Verbosity: 99
+  Geometry.OCCParallel: 1
+  Mesh.ScalingFactor: 0.0001
+  General.NumThreads: 4
 general: 
   fragment: True
   improved_bbox_calc: False
   nproc: 4 # For copymesh
+  center_bed_in_container: True
