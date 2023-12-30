@@ -561,7 +561,7 @@ class PackedBed:
         self.updateBounds()
 
         if self.volume() < target_volume: 
-            self.logger.die("Cannot prune packed bed! current volume < target volume")
+            self.logger.die(f"Cannot prune packed bed! current volume ({self.volume()}) < target volume ({target_volume})")
 
         delta_volume = self.volume() - target_volume
 
