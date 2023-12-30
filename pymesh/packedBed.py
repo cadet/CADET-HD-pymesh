@@ -68,8 +68,6 @@ class PackedBed:
         if generate: 
             self.generate()
 
-        # print(*[bead for bead in self.beads], sep='\n')
-
     def read_packing(self):
         """
         Read packing data from a given xyzd file
@@ -547,6 +545,7 @@ class PackedBed:
         factory.synchronize()
 
     def get_bounds(self): 
+        self.updateBounds()
         return {
                 'xmin': self.xmin,
                 'xmax': self.xmax,

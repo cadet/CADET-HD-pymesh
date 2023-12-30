@@ -177,6 +177,7 @@ class Container:
         self.zmax = max(self.z, self.z + self.dz)
 
     def get_bounds(self): 
+        self.update_bounds()
         return {
             'shape': self.shape,
             'size': self.size,
@@ -189,7 +190,7 @@ class Container:
             'xdelta': self.xdelta,
             'ydelta': self.ydelta,
             'zdelta': self.zdelta,
-            'R': self.r,
+            'R': self.r if 'r' in self.__dict__.keys() else 0.0,
             'cross_section_area': self.cross_section_area,
             'volume': self.volume,
         }
