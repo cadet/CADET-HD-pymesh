@@ -195,6 +195,10 @@ def calculate_geometry_info(packedBed, container):
         'particle_radius_min': particle_radius_min,
         'particle_radius_avg': particle_radius_avg,
         'particle_radius_max': particle_radius_max,
+        'column_zmin': column.zmin,
+        'column_zmax': column.zmax,
+        'bed_zmin': bed.zmin,
+        'bed_zmax': bed.zmax,
     }
 
     return data
