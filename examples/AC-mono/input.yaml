@@ -1,6 +1,6 @@
 packedbed:
   packing_file:
-    filename: /home/jayghoshter/dev/tools-old/genmesh/packing/mono-full.xyzd
+    filename: ./mono-full.xyzd
     dataformat: <f
   nbeads: -1
   zbot: 0.0 

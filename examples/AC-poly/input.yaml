@@ -1,6 +1,6 @@
 packedbed:
   packing_file:
-    filename: /home/jayghoshter/dev/tools-old/genmesh/packing/poly-full.xyzd
+    filename: ./poly-full.xyzd
     dataformat: <f
   nbeads: -1
   zbot: 70.0 
