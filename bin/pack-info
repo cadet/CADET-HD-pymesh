@@ -95,13 +95,23 @@ def volShellRegion(beads, rShells, i):
     """
     volShell=0
     radsShell=[]
+    volBeads=[]
     for bead in beads:
         volBead = volBeadSlice(bead, rShells[i], rShells[i+1])
         volShell = volShell + volBead
-        radBead = pow(volBead/(4.0/3.0*pi), 1.0/3.0)
-        if radBead != 0:
+
+        ## Previously used. Considers split regions as independent SMALLER particles 
+        ## Assumes particle radii are smaller than radial zone sizes
+        # radBead = pow(volBead/(4.0/3.0*pi), 1.0/3.0)
+
+        # New code, uses exact radius in conjunction with split particle volumes, which can then be used as weights in the histogram to generate volume fractions
+        # WARNING: this way, particles can be larger than radial zone sizes.
+        radBead = bead.r
+
+        if volBead != 0:
             radsShell.append(radBead)
-    return volShell, radsShell
+            volBeads.append(volBead)
+    return volShell, radsShell, volBeads
 
 # def radsShellRegion(beads, rShells, i):
 #     """
@@ -281,12 +291,13 @@ def process(packedBed, container, npartype=1, nrad=1, shelltype='EQUIDISTANT'):
     pool = Pool()
     parfunc = partial(volShellRegion, packedBed.beads, rShells)
     # volRegions = pool.map(parfunc, range(nRegions))
-    total_beads_volume_per_shell, radii_beads_per_shell = zip(*pool.map(parfunc, range(nRegions)))
+    total_beads_volume_per_shell, radii_beads_per_shell, volumes_beads_per_shell = zip(*pool.map(parfunc, range(nRegions)))
     pool.close()
     pool.join()
 
     total_beads_volume_per_shell = np.array(total_beads_volume_per_shell).astype(np.float64)
     radii_beads_per_shell = [ np.array(item).astype(np.float64) for item in radii_beads_per_shell ]
+    volumes_beads_per_shell = [ np.array(item).astype(np.float64) for item in volumes_beads_per_shell ]
 
     bed_length = packedBed.zdelta
     column_length = container.zdelta
@@ -302,9 +313,11 @@ def process(packedBed, container, npartype=1, nrad=1, shelltype='EQUIDISTANT'):
     ## Get histogram data: volume fractions and radii, for each shell
     ## bin_radii is the list of mean bin radii for each shell, which is set to bin_edges
     volFracs = []
-    for rads in radii_beads_per_shell:
-        V=[4*np.pi*x*x*x/3 for x in rads]
-        volumes, bin_edges = np.histogram([float(x) for x in rads], bins=bin_edges, weights=V)
+    for rads,vols in zip(radii_beads_per_shell, volumes_beads_per_shell): # For every zone
+        ## NOTE: Old code, assumes split regions of particles across rShells as SMALLER particles
+        # vols = [4*np.pi*x*x*x/3 for x in rads] 
+        # New code uses the volumes output by volShellRegion
+        volumes, bin_edges = np.histogram([float(x) for x in rads], bins=bin_edges, weights=vols) 
         volFrac=[x/sum(volumes) for x in volumes]
         volFracs.extend(volFrac)
 
