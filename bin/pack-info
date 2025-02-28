@@ -241,7 +241,7 @@ def main():
 
     post_scale_data = calculate_geometry_info(packedBed, container)
 
-    data = process(packedBed, container, args.npartype, args.nrad)
+    data = process(packedBed, container, args.npartype, args.nrad, args.shelltype)
 
     alldata = {
         'nbeads': packedBed.nBeads,
