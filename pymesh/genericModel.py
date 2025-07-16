@@ -44,8 +44,8 @@ class GenericModel:
 
         self.packedBed = PackedBed(config, generate=False)
 
-        if not config.container_shape:
-            return
+        # if not config.container_shape:
+        #     return
 
         column_container = Container(self.container_shape, self.container_size, generate=False)
 
