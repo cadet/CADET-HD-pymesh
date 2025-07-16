@@ -33,6 +33,8 @@ class Container:
             self.x, self.y, self.z, self.dx, self.dy, self.dz = self.size
         elif self.shape == 'cylinder':
             self.x, self.y, self.z, self.dx, self.dy, self.dz, self.r = self.size
+        else:
+            return
 
         self.update_bounds()
         self.logger.print(self.get_bounds())
