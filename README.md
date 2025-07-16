@@ -2,7 +2,7 @@
 
 **Pymesh** is a flexible, Python-based packed-bed column meshing tool for chromatography simulations, built as a wrapper around [GMSH](https://gmsh.info/). It's a cleaner rewrite of `genmesh`, with a modular architecture and simpler setup.
 
-![Example of a Periodic Mesh](./assets/periodic-mesh.png)
+![Example of a Periodic Mesh](./.assets/periodic-mesh.png)
 
 # Install
 
