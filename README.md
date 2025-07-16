@@ -13,8 +13,14 @@ pip install -e .
 ```
 
 If gmsh is built from source, ensure that 
+
     - `PYTHONPATH` points to `$GMSH_ROOT/lib` (or wherever the gmsh.py file is)
     - `LD_LIBRARY_PATH` points to `$GMSH_ROOT/lib` (or wherever the gmsh{.so,.a} files are)
+
+```bash
+export PYTHONPATH=$GMSH_ROOT/lib
+export LD_LIBRARY_PATH=$GMSH_ROOT/lib
+```
 
 # Usage
 
