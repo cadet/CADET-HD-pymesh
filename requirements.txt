@@ -2,3 +2,5 @@ numpy
 rich
 gitpython
 ruamel.yaml
+gmsh
+mpmath
